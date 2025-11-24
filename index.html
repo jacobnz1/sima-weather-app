@@ -361,4 +361,327 @@
         <!-- RADAR -->
         <section id="page-radar" class="page">
             <h1>Maps & Radar</h1>
-            <iframe src="https://embed.windy.com/embed2.html?lat=-43.5&lon=171.5&zoom=6&level=surface&overlay=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&
+            <iframe src="https://embed.windy.com/embed2.html?lat=-43.5&lon=171.5&zoom=6&level=surface&overlay=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" style="width:100%; height:70vh; border:none; border-radius:12px;"></iframe>
+        </section>
+
+    </main>
+
+    <!-- LIGHTBOX -->
+    <div id="lb" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center;" onclick="this.style.display='none'">
+        <img id="lb-img" style="max-width:95%; max-height:95%; border-radius:4px;">
+    </div>
+
+<script>
+    const CONFIG = { news:'69238031d0ea881f40fb9d04', sig:'68d8c3c6d0ea881f408d7a5c', storm:'68d8cdac43b1c97be9528f9b', snow:'68e0738e43b1c97be9599eb1', alerts:'68db095dae596e708f0072be', drought:'68d9fc07d0ea881f408e8e5b', key: '$2a$10$/h3xvps5BAmoU8dJigw8T.qYg3eoESVLwjXbX9aHmb85Y96cExsCe' };
+    const getFresh = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
+    
+    // --- FORECAST WIDGET LOGIC ---
+    const forecastWidget = (function(){
+      const towns = [
+        { name: "Nelson", lat: -41.2706, lng: 173.2840 }, { name: "Blenheim", lat: -41.5134, lng: 173.9612 },
+        { name: "Takaka", lat: -40.8500, lng: 172.8000 }, { name: "Westport", lat: -41.7545, lng: 171.6058 },
+        { name: "Greymouth", lat: -42.4500, lng: 171.2000 }, { name: "Hokitika", lat: -42.7173, lng: 170.9656 },
+        { name: "Kaikoura", lat: -42.4008, lng: 173.6815 }, { name: "Hanmer Springs", lat: -42.5167, lng: 172.8167 },
+        { name: "Christchurch", lat: -43.5321, lng: 172.6362 }, { name: "Ashburton", lat: -43.9006, lng: 171.7400 },
+        { name: "Timaru", lat: -44.3931, lng: 171.2508 }, { name: "Tekapo", lat: -44.0047, lng: 170.4771 },
+        { name: "Mt Cook", lat: -43.7333, lng: 170.1000 }, { name: "Wanaka", lat: -44.7000, lng: 169.1500 },
+        { name: "Queenstown", lat: -45.0312, lng: 168.6626 }, { name: "Alexandra", lat: -45.2492, lng: 169.3797 },
+        { name: "Milford Sound", lat: -44.6414, lng: 167.8974 }, { name: "Oamaru", lat: -45.0975, lng: 170.9690 },
+        { name: "Dunedin", lat: -45.8788, lng: 170.5028 }, { name: "Balclutha", lat: -46.2333, lng: 169.7333 },
+        { name: "Gore", lat: -46.1028, lng: 168.9436 }, { name: "Invercargill", lat: -46.4132, lng: 168.3538 },
+        { name: "Stewart Is.", lat: -46.8967, lng: 168.1265 }
+      ];
+      const CORRECTION_FACTORS = {
+        "Queenstown": { temp: 1.0, wind: 1.2, rain: 1.0 }, 
+        "Wanaka": { temp: 1.0, wind: 1.0, rain: 0.9 },
+        "Christchurch": { temp: 0, wind: 1.1, rain: 1.0 },
+        "Wellington": { temp: 0, wind: 1.3, rain: 1.0 },
+      };
+      let globalData = [];
+
+      const ui = {
+        getIcon: (code) => {
+          const pSun = `<circle cx="12" cy="12" r="5" fill="#f6e05e"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#ecc94b" stroke-width="2"/>`;
+          const pCloud = `<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="#e2e8f0" stroke="#cbd5e0" stroke-width="2"/>`;
+          const pRain = `<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="#e2e8f0" stroke="#cbd5e0"/><path d="M8 23l-2-4M12 23l-2-4M16 23l-2-4" stroke="#63b3ed" stroke-width="2"/>`;
+          const pSnow = `<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="#e2e8f0" stroke="#cbd5e0"/><path d="M8 21h.01M12 21h.01M16 21h.01" stroke="#90cdf4" stroke-width="4"/>`;
+          if([0,1].includes(code)) return `<svg viewBox="0 0 24 24">${pSun}</svg>`;
+          if([2,3].includes(code)) return `<svg viewBox="0 0 24 24">${pCloud}</svg>`;
+          if(code >= 51 && code <= 67) return `<svg viewBox="0 0 24 24">${pRain}</svg>`;
+          if(code >= 71 && code <= 77) return `<svg viewBox="0 0 24 24">${pSnow}</svg>`;
+          if(code >= 80) return `<svg viewBox="0 0 24 24">${pRain}</svg>`;
+          return `<svg viewBox="0 0 24 24">${pCloud}</svg>`;
+        },
+        getDir: (d) => {
+          const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+          return dirs[Math.round(d / 22.5) % 16];
+        },
+        toggleExt: (mode) => {
+          document.getElementById('tab-cur').className = mode === 'cur' ? 'ext-btn active' : 'ext-btn';
+          document.getElementById('tab-day').className = mode === 'day' ? 'ext-btn active' : 'ext-btn';
+          document.getElementById('l-max').innerText = mode === 'cur' ? 'Hottest' : 'High (Today)';
+          document.getElementById('l-min').innerText = mode === 'cur' ? 'Coldest' : 'Low (Today)';
+          document.getElementById('l-rain').innerText = mode === 'cur' ? 'Rain (1h)' : 'Rain (Total)';
+          document.getElementById('l-wind').innerText = mode === 'cur' ? 'Gusts (Now)' : 'Peak Gust';
+          let maxT=-99, minT=99, maxW=-1, maxR=-1;
+          let lT="", lMin="", lW="", lR="";
+          globalData.forEach((d, i) => {
+            const name = towns[i].name;
+            const factors = CORRECTION_FACTORS[name] || { temp: 0, wind: 1.0, rain: 1.0 };
+            if (mode === 'cur') {
+              const c = d.current;
+              const temp = c.temperature_2m + factors.temp; 
+              const wind = c.wind_gusts_10m * factors.wind;
+              if(temp > maxT) { maxT=temp; lT=name; }
+              if(temp < minT) { minT=temp; lMin=name; }
+              if(wind > maxW) { maxW=wind; lW=name; }
+              if(c.precipitation > maxR) { maxR=c.precipitation; lR=name; }
+            } else {
+              const h = d.hourly;
+              const nowH = new Date().getHours();
+              const slicedT = h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp);
+              const slicedW = h.wind_gusts_10m.slice(0, nowH+1).map(w => w * factors.wind);
+              const slicedR = h.precipitation.slice(0, nowH+1);
+              const localMax = Math.max(...slicedT);
+              const localMin = Math.min(...slicedT);
+              const localWind = Math.max(...slicedW);
+              const localRain = slicedR.reduce((a,b)=>a+b,0);
+              if(localMax > maxT) { maxT=localMax; lT=name; }
+              if(localMin < minT) { minT=localMin; lMin=name; }
+              if(localWind > maxW) { maxW=localWind; lW=name; }
+              if(localRain > maxR) { maxR=localRain; lR=name; }
+            }
+          });
+          document.getElementById('x-max').innerText = Math.round(maxT) + "°"; document.getElementById('loc-max').innerText = lT;
+          document.getElementById('x-min').innerText = Math.round(minT) + "°"; document.getElementById('loc-min').innerText = lMin;
+          document.getElementById('x-wind').innerText = Math.round(maxW) + " kph"; document.getElementById('loc-wind').innerText = lW;
+          document.getElementById('x-rain').innerText = maxR.toFixed(1) + " mm"; document.getElementById('loc-rain').innerText = lR;
+        }
+      };
+
+      // Expose UI for button clicks
+      window.ui = ui;
+
+      function init() {
+        const map = L.map('si-map', { zoomControl: false, scrollWheelZoom: false, attributionControl: false });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+        map.fitBounds([[-40.4, 166.0], [-47.5, 174.5]], { padding: [20, 20] });
+
+        const lats = towns.map(l => l.lat).join(',');
+        const lngs = towns.map(l => l.lng).join(',');
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m,wind_speed_10m,wind_direction_10m,weather_code,relative_humidity_2m,apparent_temperature&hourly=temperature_2m,wind_gusts_10m,precipitation,weather_code,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Pacific%2FAuckland`;
+
+        fetch(url).then(r => r.json()).then(data => {
+          globalData = Array.isArray(data) ? data : [data];
+          globalData.forEach((d, i) => {
+            const t = towns[i];
+            const factors = CORRECTION_FACTORS[t.name] || { temp: 0 };
+            const displayTemp = Math.round(d.current.temperature_2m + factors.temp);
+            const m = L.marker([t.lat, t.lng], {
+              icon: L.divIcon({
+                className: 'd',
+                html: `<div class="si-marker"><span class="name">${t.name}</span><span class="temp">${displayTemp}°</span></div>`,
+                iconSize: [null, null], iconAnchor: [40, 15]
+              })
+            }).addTo(map);
+            m.on('click', () => openModal(t, d));
+          });
+          ui.toggleExt('cur');
+        });
+
+        function openModal(town, data) {
+          const c = data.current;
+          const h = data.hourly;
+          const d = data.daily;
+          const nowH = new Date().getHours();
+          const factors = CORRECTION_FACTORS[town.name] || { temp: 0, wind: 1.0, rain: 1.0 };
+          const adjTemp = c.temperature_2m + factors.temp;
+          const rainSoFar = h.precipitation.slice(0, nowH+1).reduce((a,b)=>a+b,0);
+          const windSoFar = Math.max(...h.wind_gusts_10m.slice(0, nowH+1).map(w => w * factors.wind));
+          const maxSoFar = Math.max(...h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp));
+          const minSoFar = Math.min(...h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp));
+          let fcMax = d.temperature_2m_max[0] + factors.temp;
+          if(adjTemp > fcMax) { fcMax = Math.round(adjTemp) + 1; }
+          const wCode = c.weather_code;
+          let desc = "cloudy";
+          if([0,1].includes(wCode)) desc = "clear and sunny"; else if([2,3].includes(wCode)) desc = "partly cloudy"; else if(wCode >= 51) desc = "rainy";
+          const windDir = ui.getDir(c.wind_direction_10m);
+          const summary = `Currently ${desc}, ${Math.round(adjTemp)}°C. Wind ${windDir} at ${Math.round(c.wind_speed_10m * factors.wind)} kph. Rain today: ${rainSoFar.toFixed(1)}mm.`;
+
+          document.getElementById('m-city').innerText = town.name;
+          
+          let html = `
+            <div class="obs-hero">
+              <div class="obs-icon">${ui.getIcon(c.weather_code)}</div>
+              <div class="obs-temp">${Math.round(adjTemp)}°</div>
+              <div class="obs-text">${summary}</div>
+            </div>
+            <div class="section-title">Observations Since Midnight</div>
+            <div class="stats-grid">
+              <div class="stat-box"><span class="st-lbl">Rainfall</span><span class="st-val">${rainSoFar.toFixed(1)} mm</span></div>
+              <div class="stat-box"><span class="st-lbl">Max Temp</span><span class="st-val">${Math.round(maxSoFar)}°</span></div>
+              <div class="stat-box"><span class="st-lbl">Min Temp</span><span class="st-val">${Math.round(minSoFar)}°</span></div>
+              <div class="stat-box"><span class="st-lbl">Peak Gust</span><span class="st-val">${Math.round(windSoFar)} kph</span></div>
+            </div>
+            <div class="section-title">Next 24 Hours</div>
+            <div class="hourly-scroll">`;
+          
+          for(let i=nowH; i<nowH+24; i++) {
+            if(!h.time[i]) break;
+            const tTime = new Date(h.time[i]).getHours() + ":00";
+            const tTemp = Math.round(h.temperature_2m[i] + factors.temp);
+            const tDir = ui.getDir(h.wind_direction_10m[i]);
+            html += `<div class="h-card"><div class="h-time">${tTime}</div><div class="h-icon">${ui.getIcon(h.weather_code[i])}</div><div class="h-temp">${tTemp}°</div><div class="h-wind">${tDir}</div></div>`;
+          }
+          html += `</div><div class="section-title">5-Day Forecast</div><div class="d-list">`;
+          for(let i=0; i<5; i++) {
+            const dayName = i===0 ? "Today" : new Date(d.time[i]).toLocaleDateString('en-NZ',{weekday:'short'});
+            const displayMax = i===0 ? Math.round(fcMax) : Math.round(d.temperature_2m_max[i] + factors.temp);
+            const displayMin = Math.round(d.temperature_2m_min[i] + factors.temp);
+            html += `<div class="d-row"><div class="d-day">${dayName}</div><div class="d-icon">${ui.getIcon(d.weather_code[i])}</div><div class="d-sum">${ui.getIcon(d.weather_code[i]).includes('rain') ? 'Rain likely' : 'Clear skies'}</div><div class="d-temps">${displayMax}° / ${displayMin}°</div></div>`;
+          }
+          html += `</div>`;
+          document.getElementById('m-body').innerHTML = html;
+          document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        const input = document.getElementById('si-input');
+        const dd = document.getElementById('si-dd');
+        input.addEventListener('input', (e) => {
+          const v = e.target.value.toLowerCase();
+          dd.innerHTML = '';
+          if(v.length < 1) { dd.style.display='none'; return; }
+          const m = towns.filter(t => t.name.toLowerCase().includes(v));
+          if(m.length) {
+            dd.style.display='block';
+            m.forEach((t) => {
+              const realIdx = towns.findIndex(x => x.name === t.name);
+              const div = document.createElement('div');
+              div.className = 'si-dd-item'; div.innerText = t.name;
+              div.onclick = () => { input.value = t.name; dd.style.display='none'; openModal(t, globalData[realIdx]); };
+              dd.appendChild(div);
+            });
+          } else dd.style.display='none';
+        });
+
+        document.getElementById('m-close').onclick = () => document.getElementById('modal-overlay').classList.remove('active');
+        document.getElementById('modal-overlay').onclick = (e) => { if(e.target.id==='modal-overlay') e.target.classList.remove('active'); };
+      }
+      return { init };
+    })();
+
+    const app = {
+        init: () => { 
+            app.fetchData(); 
+            window.addEventListener('hashchange', app.route);
+            window.addEventListener('load', app.route);
+            forecastWidget.init(); // Init the new map widget
+        },
+        route: () => {
+            const h = window.location.hash || '#/';
+            let id = 'page-home';
+            if(h.includes('article')) { id='page-article'; app.loadArticle(h.split('/').pop()); }
+            else if(h.includes('outlook')) id='page-outlook';
+            else if(h.includes('alerts')) id='page-alerts';
+            else if(h.includes('storm')) id='page-storm';
+            else if(h.includes('snow')) id='page-snow';
+            else if(h.includes('drought')) id='page-drought';
+            else if(h.includes('radar')) id='page-radar';
+            
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('mm').classList.remove('open');
+            window.scrollTo(0,0);
+        },
+        router: (p) => window.location.hash = p,
+        
+        fetchData: async () => {
+            const now = new Date();
+
+            // 1. ALERTS
+            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.alerts}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
+                const data = d.record;
+                const active = (data.blocks||[]).filter(b => new Date(b.endTime) > now);
+                document.getElementById('alerts-overview').innerText = data.globalInfo?.overview || "";
+                const c = document.getElementById('alerts-feed'); c.innerHTML = '';
+                if(active.length > 0) {
+                    document.getElementById('alert-banner').style.display = 'block';
+                    document.getElementById('alert-banner').innerHTML = `⚠️ ${active.length} Active Weather Alerts`;
+                    document.body.classList.add('has-alert');
+                    active.forEach(b => {
+                        c.innerHTML += `<div class="alert-card ${b.type==='Critical'?'crit':''}"><div class="ac-head"><span style="font-weight:800; font-size:1.1rem; color:${b.type==='Critical'?'#ef4444':'#f59e0b'}">${b.weatherType}</span><span class="badge bg-${b.type}">${b.type} Risk</span></div><div class="ac-body"><div class="ac-meta"><div><span class="ac-label">Affected Regions</span>${b.regions.join(', ')}</div><div><span class="ac-label">Valid Until</span>${new Date(b.endTime).toLocaleString()}</div></div><p style="white-space:pre-line;">${b.summary}</p></div></div>`;
+                    });
+                } else { c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">No active significant weather alerts.</div>'; }
+            });
+
+            // 2. STORMCAST
+            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.storm}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
+                const active = (d.record.outlooks||[]).filter(o => new Date(o.validUntil) > now);
+                const c = document.getElementById('storm-feed'); c.innerHTML = '';
+                if(!active.length) c.innerHTML = '<div style="text-align:center; color:#94a3b8">No active StormCast outlooks.</div>';
+                active.forEach(o => {
+                    let regionsHtml = '';
+                    (o.regionalForecasts||[]).forEach(r => {
+                        regionsHtml += `<div class="fc-region"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><strong>${r.regionName}</strong><span class="badge bg-${r.riskLevel}">${r.riskLevel}</span></div><div style="font-size:0.8rem; color:#64748b; margin-bottom:8px;">${r.timing}</div><div class="risk-tags">${(r.risks||[]).map(k=>`<span class="badge" style="background:#cbd5e1; color:#334155;">${k}</span>`).join('')}</div><p style="font-size:0.9rem; margin-top:8px;">${r.threats}</p></div>`;
+                    });
+                    c.innerHTML += `<div class="fc-wrap"><div class="fc-hero"><h2>${o.title}</h2><div style="font-size:0.9rem; opacity:0.9; margin-top:5px;">Valid: ${new Date(o.validFrom).toLocaleString()} &rarr; ${new Date(o.validUntil).toLocaleString()}</div><p style="margin-top:15px; max-width:700px;">${o.overallDiscussion}</p></div>${o.mapUrl ? `<img src="${o.mapUrl}" class="fc-map" onclick="document.getElementById('lb-img').src=this.src;document.getElementById('lb').style.display='flex'">` : ''}<div class="fc-grid">${regionsHtml}</div></div>`;
+                });
+            });
+
+            // 3. SNOWCAST
+            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.snow}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
+                const data = d.record;
+                document.getElementById('sc-main-title').innerText = data.mainTitle || "SnowCast";
+                document.getElementById('sc-main-overview').innerText = data.overview || "";
+                const active = (data.forecasts||[]).filter(f => new Date(f.validTo) > now);
+                const c = document.getElementById('snow-feed'); c.innerHTML = '';
+                if(!active.length) c.innerHTML = '<div style="text-align:center; color:#94a3b8">No active SnowCast warnings.</div>';
+                active.forEach(f => { c.innerHTML += `<div class="alert-card"><div class="ac-head"><strong>${f.region}</strong><span class="badge bg-${f.riskLevel}">${f.riskLevel} Snow Risk</span></div><div class="ac-body"><div class="ac-meta"><div><span class="ac-label">Valid From</span>${new Date(f.validFrom).toLocaleString()}</div><div><span class="ac-label">Valid To</span>${new Date(f.validTo).toLocaleString()}</div></div><p>${f.summary}</p></div></div>`; });
+            });
+
+            // 4. SWO
+            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.sig}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
+                document.getElementById('swo-title').innerText = d.record.overallTitle || "";
+                document.getElementById('swo-summary').innerText = d.record.overallSummary || "";
+                const c = document.getElementById('outlook-container'); c.innerHTML = '';
+                const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                const active = (d.record.forecasts||[]).filter(f => new Date(f.date) >= todayStart);
+                active.forEach(f => { c.innerHTML += `<div class="swo-card">${f.imageUrl ? `<img src="${f.imageUrl}" class="swo-img" onclick="document.getElementById('lb-img').src=this.src;document.getElementById('lb').style.display='flex'">` : ''}<div><h3 style="margin-bottom:5px;">${new Date(f.date).toLocaleDateString('en-NZ', {weekday:'long', day:'numeric', month:'long'})}</h3><span class="badge bg-${f.alertLevel}">${f.alertLevel || 'Low'} Risk</span><p style="margin-top:10px; color:#475569;">${f.summary}</p></div></div>`; });
+            });
+
+            // 5. NEWS
+            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.news}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
+                window.newsData = d.record.news || [];
+                const c = document.getElementById('news-feed'); c.innerHTML = '';
+                window.newsData.sort((a,b) => new Date(b.scheduledAt) - new Date(a.scheduledAt));
+                window.newsData.forEach((n, i) => {
+                    const id = n.scheduledAt ? new Date(n.scheduledAt).getTime() : i;
+                    const snip = n.content.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...';
+                    c.innerHTML += `<div class="news-card" onclick="app.router('#/article/${id}')"><div class="nc-img" style="background-image:url('${n.titleImg && n.titleImg !== 'MOCK_URL' ? n.titleImg : 'logo.png'}')"></div><div class="nc-body"><div class="nc-date">${new Date(n.scheduledAt).toLocaleDateString()} • ${n.tag}</div><div class="nc-title">${n.title}</div><p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">${snip}</p><div class="nc-link">${n.linkText || 'Read Full Story &rarr;'}</div></div></div>`;
+                });
+            });
+
+            // 6. DROUGHT
+            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.drought}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
+                document.getElementById('dc-title').innerText = d.record.overview?.title || "";
+                document.getElementById('dc-sum').innerText = d.record.overview?.summary || "";
+                const c = document.getElementById('dc-feed'); c.innerHTML = '';
+                (d.record.alerts||[]).forEach(a => { c.innerHTML += `<div class="dc-card"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><strong>${a.region}</strong><span class="badge bg-${a.severity}">${a.severity}</span></div><div class="ac-meta"><div><span class="ac-label">Rain Potential</span>${a.rainPotential}</div><div><span class="ac-label">Expires</span>${new Date(a.endDate).toLocaleDateString()}</div></div><p>${a.summary}</p></div>`; });
+            });
+        },
+
+        loadArticle: (id) => {
+            const c = document.getElementById('article-content');
+            c.innerHTML = '<p style="text-align:center">Loading article...</p>';
+            if(!window.newsData) { setTimeout(() => app.loadArticle(id), 500); return; }
+            const art = window.newsData.find(n => (new Date(n.scheduledAt).getTime() == id));
+            if(art) {
+                c.innerHTML = `<div class="art-header"><div style="color:#94a3b8; font-size:0.9rem; text-transform:uppercase; font-weight:700; margin-bottom:10px;">${art.tag} • ${new Date(art.scheduledAt).toLocaleDateString()}</div><h1 style="font-size:2rem; color:#0f172a; max-width:800px; margin:0 auto;">${art.title}</h1></div>${art.titleImg && art.titleImg !== 'MOCK_URL' ? `<img src="${art.titleImg}" class="art-img">` : ''}<div class="art-body">${art.content}</div>`;
+            } else { c.innerHTML = '<p style="text-align:center; color:red;">Article not found.</p>'; }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', app.init);
+</script>
+</body>
+</html>
