@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- THEME --- */
+        /* --- CORE THEME --- */
         :root {
             --primary: #0f172a; --accent: #0ea5e9; --bg: #f8fafc; 
             --text: #334155; --card-bg: #ffffff; --border: #e2e8f0;
@@ -32,6 +32,7 @@
         @keyframes fade { from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);} }
         .ad-box { background: #e2e8f0; padding: 20px; text-align: center; margin: 30px 0; border-radius: 8px; color: #94a3b8; font-size: 0.8rem; border: 1px dashed #cbd5e1; }
         
+        /* BADGES & BORDERS */
         .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .bg-Slight { background: var(--risk-slight); color: #000; text-shadow: none; } 
         .bg-Enhanced { background: var(--risk-enhanced); } 
@@ -53,12 +54,14 @@
         .brand img { height: 45px; width: auto; }
         .d-menu { display: none; gap: 20px; } @media(min-width: 950px) { .d-menu { display: flex; } }
         .nav-link { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); text-decoration: none; } .nav-link:hover { color: var(--accent); }
+        
         .nav-btn-refresh { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
         .nav-btn-refresh:hover { background: #e2e8f0; }
+
         .m-toggle { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; } @media(min-width: 950px) { .m-toggle { display: none; } }
         .m-menu { position: fixed; top: 70px; right: 0; width: 250px; height: 100vh; background: white; transform: translateX(100%); transition: 0.3s; padding: 20px; border-left: 1px solid var(--border); z-index: 999; display: flex; flex-direction: column; gap: 15px; } .m-menu.open { transform: translateX(0); }
 
-        /* --- WIDGETS & CARDS --- */
+        /* --- COMPONENTS --- */
         .alert-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--risk-mod); border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
         .ac-head { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .ac-body { padding: 20px; }
@@ -67,14 +70,16 @@
 
         .fc-wrap { background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
         .fc-hero { padding: 25px; background: linear-gradient(to right, #0f172a, #1e293b); color: white; }
+        .fc-map { width: 100%; height: auto; display: block; border-bottom: 1px solid var(--border); cursor: pointer; }
         .fc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 25px; }
         .fc-region { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); border-left: 4px solid transparent; }
         .risk-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
-
+        
         .swo-card { display: flex; gap: 20px; background: white; border: 1px solid var(--border); padding: 20px; border-radius: 10px; margin-bottom: 20px; align-items: start; }
+        @media(max-width: 600px) { .swo-card { flex-direction: column; } }
         .swo-img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; background: #e2e8f0; flex-shrink: 0; cursor: pointer; }
-
-        /* NEWS */
+        
+        /* NEWS LAYOUT */
         .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         .news-card { background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: all 0.3s ease; cursor: pointer; display: flex; flex-direction: column; height: 100%; }
         .news-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: var(--accent); }
@@ -91,6 +96,17 @@
         .art-body { font-size: 1.1rem; line-height: 1.8; color: #334155; }
         .art-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; }
         .back-btn { display: inline-block; margin-bottom: 20px; color: #64748b; text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        .dc-card { border-left: 5px solid #f59e0b; background: #fff; margin-bottom: 15px; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* ABOUT PAGE */
+        .about-section { background: white; padding: 40px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; }
+        .about-section h2 { margin-top: 0; color: var(--primary); }
+        .about-section h3 { margin-top: 25px; color: var(--primary); font-size: 1.2rem; }
+        .risk-def { margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #ccc; }
+        .terms-details { margin-top: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .terms-summary { padding: 15px; background: #f1f5f9; cursor: pointer; font-weight: 600; }
+        .terms-content { padding: 20px; background: white; border-top: 1px solid var(--border); font-size: 0.9rem; }
 
         /* HOME WIDGET */
         #si-weather-root { isolation: isolate; background-color: #ffffff !important; color: #1e293b !important; font-family: 'Inter', sans-serif; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; height: 650px; display: flex; margin-bottom: 30px; }
@@ -150,15 +166,6 @@
         .fc-d-temps { font-weight: 700; text-align: right; min-width: 70px; flex-shrink: 0; }
         .fc-d-temps span { color: #94a3b8; font-weight: 400; font-size: 0.85rem; margin-left: 5px; }
         .fc-disclaimer { margin-top: 20px; padding: 15px; background: #fff7ed; color: #9a3412; font-size: 0.8rem; border-radius: 8px; text-align: center; border: 1px solid #ffedd5; }
-
-        /* ABOUT PAGE */
-        .about-section { background: white; padding: 40px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; }
-        .about-section h2 { margin-top: 0; color: var(--primary); }
-        .about-section h3 { margin-top: 25px; color: var(--primary); font-size: 1.2rem; }
-        .risk-def { margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #ccc; }
-        .terms-details { margin-top: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .terms-summary { padding: 15px; background: #f1f5f9; cursor: pointer; font-weight: 600; }
-        .terms-content { padding: 20px; background: white; border-top: 1px solid var(--border); font-size: 0.9rem; }
 
         @media (max-width: 900px) {
             #si-weather-root { height: auto; flex-direction: column; }
@@ -308,6 +315,7 @@
     const CONFIG = { news:'69238031d0ea881f40fb9d04', sig:'68d8c3c6d0ea881f408d7a5c', storm:'68d8cdac43b1c97be9528f9b', snow:'68e0738e43b1c97be9599eb1', alerts:'68db095dae596e708f0072be', drought:'68d9fc07d0ea881f408e8e5b', key: '$2a$10$/h3xvps5BAmoU8dJigw8T.qYg3eoESVLwjXbX9aHmb85Y96cExsCe' };
     const getFresh = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
     
+    /* --- HOME WIDGET LOGIC --- */
     const siWidget = (function(){
         const towns=[{name:"Nelson",lat:-41.27,lng:173.28},{name:"Blenheim",lat:-41.51,lng:173.96},{name:"Westport",lat:-41.75,lng:171.60},{name:"Greymouth",lat:-42.45,lng:171.20},{name:"Kaikoura",lat:-42.40,lng:173.68},{name:"Christchurch",lat:-43.53,lng:172.63},{name:"Timaru",lat:-44.39,lng:171.25},{name:"Mt Cook",lat:-43.73,lng:170.10},{name:"Queenstown",lat:-45.03,lng:168.66},{name:"Dunedin",lat:-45.87,lng:170.50},{name:"Invercargill",lat:-46.41,lng:168.35},{name:"Stewart Is.",lat:-46.89,lng:168.12}];
         let map, globalData = [];
@@ -326,7 +334,7 @@
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
             }
             const lats = towns.map(t=>t.lat).join(','); const lngs = towns.map(t=>t.lng).join(',');
-            const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m&hourly=temperature_2m,wind_gusts_10m,precipitation&timezone=Pacific%2FAuckland`;
+            const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m,weather_code,relative_humidity_2m,apparent_temperature,surface_pressure&hourly=temperature_2m,wind_gusts_10m,precipitation,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,uv_index_max,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant&timezone=Pacific%2FAuckland`;
             const r = await fetch(u); const d = await r.json();
             globalData = Array.isArray(d) ? d : [d];
             globalData.forEach((data, i) => {
