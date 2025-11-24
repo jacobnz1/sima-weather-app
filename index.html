@@ -5,17 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>South Island Meteorological Agency</title>
     
-    <!-- ADSENSE -->
+    <!-- ADSENSE CODE -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8263002259646510" crossorigin="anonymous"></script>
 
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CORE THEME --- */
+        /* =========================================
+           1. CORE APP STYLES (Navigation & Layout)
+           ========================================= */
         :root {
             --primary: #0f172a; --accent: #0ea5e9; --bg: #f1f5f9; 
             --text: #334155; --card-bg: #ffffff; --border: #e2e8f0;
@@ -86,6 +89,99 @@
 
         /* Drought */
         .dc-card { border-left: 5px solid #f59e0b; background: #fff; margin-bottom: 15px; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* =========================================
+           2. HOME FORECAST WIDGET STYLES
+           ========================================= */
+        #si-weather-root {
+            isolation: isolate; 
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            line-height: 1.5; width: 100%; border-radius: 24px; overflow: hidden; position: relative; z-index: 1; text-align: left;
+        }
+        #si-weather-root img, #si-weather-root svg, #si-weather-root .leaflet-tile-pane, #si-weather-root .leaflet-tile, #si-weather-root .leaflet-layer, #si-weather-root .leaflet-pane {
+            filter: none !important; -webkit-filter: none !important; mix-blend-mode: normal !important; opacity: 1 !important;
+        }
+        #si-weather-root .si-sidebar, #si-weather-root .modal-card, #si-weather-root .modal-header, #si-weather-root .ext-card, #si-weather-root .stat-box, #si-weather-root .si-input {
+            background-color: #ffffff !important;
+        }
+        #si-hub { display: flex; width: 100%; height: 850px; background: #ffffff; border: 1px solid #e2e8f0; position: relative; }
+        #si-hub * { box-sizing: border-box; }
+        .si-sidebar { width: 400px; background: #ffffff; border-right: 1px solid #f1f5f9; padding: 32px; display: flex; flex-direction: column; gap: 28px; flex-shrink: 0; z-index: 10; position: relative; }
+        .si-header h2 { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+        .si-header p { margin: 6px 0 0; font-size: 14px; color: #64748b; font-weight: 500; }
+        .si-search-wrap { position: relative; }
+        .si-input { width: 100%; padding: 16px 16px 16px 48px; border-radius: 14px; border: 1px solid #cbd5e0; background: #f8fafc !important; font-size: 15px; color: #334155; outline: none; transition: 0.2s; }
+        .si-input:focus { background: #ffffff !important; border-color: #5c6ac4; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .si-search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 18px; opacity: 0.5; }
+        .si-dd { position: absolute; top: 110%; left: 0; right: 0; background: #ffffff !important; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); max-height: 280px; overflow-y: auto; display: none; z-index: 100; }
+        .si-dd-item { padding: 14px 18px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        .si-dd-item:hover { background: #f8fafc !important; color: #5c6ac4; font-weight: 500; }
+        .ext-card { background: #ffffff !important; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.03); }
+        .ext-nav { display: flex; background: #f1f5f9; padding: 5px; border-radius: 10px; }
+        .ext-btn { flex: 1; border: none; background: transparent; padding: 10px; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .ext-btn.active { background: #ffffff; color: #0f172a; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .ext-row { display: flex; align-items: center; gap: 18px; padding-bottom: 16px; border-bottom: 1px solid #f8fafc; }
+        .ext-row:last-child { padding-bottom: 0; border-bottom: none; }
+        .ext-ico { width: 44px; height: 44px; background: #f8fafc; border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; color: #5c6ac4; }
+        .ext-ico svg { width: 22px; height: 22px; }
+        .ext-info { display: flex; flex-direction: column; gap: 4px; }
+        .ext-val { font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1; }
+        .ext-lbl { font-size: 12px; color: #94a3b8; font-weight: 500; }
+        .ext-lbl span { color: #64748b; font-weight: 600; }
+        .si-footer { margin-top: auto; font-size: 11px; color: #cbd5e0; text-align: center; padding-top: 10px; }
+        #si-map { flex-grow: 1; height: 100%; background: #ffffff; z-index: 1; }
+        .leaflet-tile-pane { filter: contrast(0.95) brightness(1.05); }
+        .leaflet-control-attribution { display: none; }
+        .si-marker { background: rgba(255, 255, 255, 0.98); border: 1px solid rgba(0,0,0,0.15); border-radius: 30px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: max-content; transform: translateX(-50%); cursor: pointer; transition: all 0.2s ease; }
+        .si-marker:hover { transform: translateX(-50%) scale(1.15); z-index: 999; border-color: #5c6ac4; }
+        .si-marker .name { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+        .si-marker .temp { font-size: 13px; font-weight: 800; color: #0f172a; }
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); z-index: 2000; display: none; opacity: 0; transition: opacity 0.3s ease; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-card { width: 92%; max-width: 750px; height: 92%; background: #ffffff !important; border-radius: 24px; box-shadow: 0 25px 80px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+        .modal-header { padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #ffffff !important; }
+        .mh-info h2 { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; }
+        .mh-info span { font-size: 12px; color: #5c6ac4; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .mh-close { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .mh-close:hover { background: #e2e8f0; color: #0f172a; }
+        .modal-body { padding: 30px; overflow-y: auto; flex-grow: 1; background: #ffffff !important; }
+        .obs-hero { display: flex; gap: 30px; align-items: center; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #f1f5f9; }
+        .obs-icon svg { width: 100px; height: 100px; }
+        .obs-temp { font-size: 68px; font-weight: 800; line-height: 1; color: #0f172a; letter-spacing: -2px; }
+        .obs-text { font-size: 16px; color: #475569; margin-top: 10px; line-height: 1.5; max-width: 460px; }
+        .section-title { font-size: 12px; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin: 25px 0 12px 0; letter-spacing: 1px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .stat-box { background: #f8fafc; padding: 16px; border-radius: 16px; border: 1px solid #f1f5f9; }
+        .st-lbl { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 6px; }
+        .st-val { font-size: 16px; font-weight: 700; color: #334155; }
+        .hourly-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 20px; margin-bottom: 10px; -ms-overflow-style: none; scrollbar-width: none; }
+        .hourly-scroll::-webkit-scrollbar { display: none; }
+        .h-card { flex: 0 0 80px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px 8px; text-align: center; }
+        .h-time { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; }
+        .h-icon svg { width: 32px; height: 32px; margin-bottom: 8px; }
+        .h-temp { font-size: 15px; font-weight: 800; color: #334155; }
+        .h-wind { font-size: 10px; color: #64748b; font-weight: 500; margin-top: 4px; }
+        .d-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .d-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #f8fafc; border-radius: 14px; }
+        .d-day { width: 80px; font-weight: 700; font-size: 15px; color: #334155; }
+        .d-icon svg { width: 28px; height: 28px; }
+        .d-sum { flex-grow: 1; padding: 0 20px; font-size: 13px; color: #64748b; }
+        .d-temps { font-weight: 700; font-size: 16px; color: #334155; text-align: right; min-width: 90px; }
+        .d-temps span { color: #94a3b8; font-weight: 500; margin-left: 6px; font-size: 14px; }
+        
+        @media (max-width: 900px) {
+            #si-hub { height: auto; flex-direction: column; }
+            .si-sidebar { width: 100%; border-right: none; padding: 25px; min-height: 600px; }
+            #si-map { display: none; }
+            .modal-card { width: 100%; height: 100%; border-radius: 0; }
+            .modal-body { padding: 20px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .obs-hero { flex-direction: column; text-align: center; }
+            .ext-row { gap: 20px; } .ext-val { font-size: 20px; } .ext-lbl { font-size: 13px; }
+        }
     </style>
 </head>
 <body>
@@ -122,11 +218,80 @@
         
         <!-- HOME -->
         <section id="page-home" class="page">
-            <div id="si-weather-root" style="height:600px; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; position:relative;">
-                <!-- Leaflet Map Container -->
-                <div id="si-map" style="height:100%; width:100%;"></div>
-                <div style="position:absolute; bottom:10px; left:10px; background:white; padding:5px 10px; border-radius:4px; font-size:0.8rem; z-index:999;">Tap markers for Forecast</div>
+            <!-- FORECAST WIDGET START -->
+            <div id="si-weather-root">
+              <div id="si-hub">
+                
+                <!-- MODAL POPUP -->
+                <div id="modal-overlay" class="modal-overlay">
+                  <div class="modal-card">
+                    <div class="modal-header">
+                      <div class="mh-info">
+                        <h2 id="m-city">--</h2>
+                        <span id="m-meta">Live Forecast</span>
+                      </div>
+                      <button class="mh-close" id="m-close">&times;</button>
+                    </div>
+                    <div class="modal-body" id="m-body">
+                      <div style="text-align:center; padding:50px; color:#94a3b8;">Loading...</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SIDEBAR -->
+                <div class="si-sidebar">
+                  <div class="si-header">
+                    <h2>South Island Weather</h2>
+                    <p>Live Observations & Forecasts</p>
+                  </div>
+
+                  <div class="si-search-wrap">
+                    <svg class="si-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="si-input" class="si-input" placeholder="Search town..." autocomplete="off">
+                    <div id="si-dd" class="si-dd"></div>
+                  </div>
+
+                  <!-- EXTREMES -->
+                  <div class="ext-card">
+                    <div class="ext-nav">
+                      <button class="ext-btn active" id="tab-cur" onclick="ui.toggleExt('cur')">Current</button>
+                      <button class="ext-btn" id="tab-day" onclick="ui.toggleExt('day')">Since Midnight</button>
+                    </div>
+                    
+                    <div class="ext-row">
+                      <div class="ext-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                      </div>
+                      <div class="ext-info"><span class="ext-val" id="x-max">--</span><span class="ext-lbl"><span id="l-max">Hottest</span> • <span id="loc-max">--</span></span></div>
+                    </div>
+                    <div class="ext-row">
+                      <div class="ext-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"></line></svg>
+                      </div>
+                      <div class="ext-info"><span class="ext-val" id="x-min">--</span><span class="ext-lbl"><span id="l-min">Coldest</span> • <span id="loc-min">--</span></span></div>
+                    </div>
+                    <div class="ext-row">
+                      <div class="ext-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path></svg>
+                      </div>
+                      <div class="ext-info"><span class="ext-val" id="x-wind">--</span><span class="ext-lbl"><span id="l-wind">Gusts</span> • <span id="loc-wind">--</span></span></div>
+                    </div>
+                    <div class="ext-row">
+                      <div class="ext-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.74 5.87a8 8 0 1 1-11.31 0z"></path></svg>
+                      </div>
+                      <div class="ext-info"><span class="ext-val" id="x-rain">--</span><span class="ext-lbl"><span id="l-rain">Rain</span> • <span id="loc-rain">--</span></span></div>
+                    </div>
+                  </div>
+
+                  <div class="si-footer">Data: Open-Meteo + Local Corrections</div>
+                </div>
+
+                <!-- MAP -->
+                <div id="si-map"></div>
+              </div>
             </div>
+            <!-- FORECAST WIDGET END -->
             
             <div class="ad-box">[AdSense Space]</div>
             
@@ -196,260 +361,4 @@
         <!-- RADAR -->
         <section id="page-radar" class="page">
             <h1>Maps & Radar</h1>
-            <iframe src="https://embed.windy.com/embed2.html?lat=-43.5&lon=171.5&zoom=6&level=surface&overlay=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" style="width:100%; height:70vh; border:none; border-radius:12px;"></iframe>
-        </section>
-
-    </main>
-
-    <!-- LIGHTBOX -->
-    <div id="lb" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center;" onclick="this.style.display='none'">
-        <img id="lb-img" style="max-width:95%; max-height:95%; border-radius:4px;">
-    </div>
-
-<script>
-    const CONFIG = { news:'69238031d0ea881f40fb9d04', sig:'68d8c3c6d0ea881f408d7a5c', storm:'68d8cdac43b1c97be9528f9b', snow:'68e0738e43b1c97be9599eb1', alerts:'68db095dae596e708f0072be', drought:'68d9fc07d0ea881f408e8e5b', key: '$2a$10$/h3xvps5BAmoU8dJigw8T.qYg3eoESVLwjXbX9aHmb85Y96cExsCe' };
-    const getFresh = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
-    
-    // --- MAP SETUP ---
-    let map; const towns = [
-      {name:"Nelson",lat:-41.27,lng:173.28},{name:"Blenheim",lat:-41.51,lng:173.96},{name:"Westport",lat:-41.75,lng:171.60},{name:"Greymouth",lat:-42.45,lng:171.20},
-      {name:"Kaikoura",lat:-42.40,lng:173.68},{name:"Christchurch",lat:-43.53,lng:172.63},{name:"Timaru",lat:-44.39,lng:171.25},{name:"Mt Cook",lat:-43.73,lng:170.10},
-      {name:"Queenstown",lat:-45.03,lng:168.66},{name:"Dunedin",lat:-45.87,lng:170.50},{name:"Invercargill",lat:-46.41,lng:168.35}
-    ];
-
-    const app = {
-        init: () => { 
-            app.fetchData(); 
-            window.addEventListener('hashchange', app.route);
-            window.addEventListener('load', app.route);
-            app.initMap();
-        },
-        route: () => {
-            const h = window.location.hash || '#/';
-            let id = 'page-home';
-            if(h.includes('article')) { id='page-article'; app.loadArticle(h.split('/').pop()); }
-            else if(h.includes('outlook')) id='page-outlook';
-            else if(h.includes('alerts')) id='page-alerts';
-            else if(h.includes('storm')) id='page-storm';
-            else if(h.includes('snow')) id='page-snow';
-            else if(h.includes('drought')) id='page-drought';
-            else if(h.includes('radar')) id='page-radar';
-            
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById('mm').classList.remove('open');
-            window.scrollTo(0,0);
-        },
-        router: (p) => window.location.hash = p,
-        
-        initMap: () => {
-            if(document.getElementById('si-map') && !map) {
-                map = L.map('si-map', {zoomControl:false}).setView([-43.5, 171], 6);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-                towns.forEach(t => {
-                    L.circleMarker([t.lat, t.lng], {color:'#0f172a', fillColor:'#fff', fillOpacity:1, radius:6})
-                     .addTo(map).bindPopup(`<b>${t.name}</b><br>Forecast loading...`).on('click', (e) => {
-                         // Simple forecast fetch for map popups
-                         fetch(`https://api.open-meteo.com/v1/forecast?latitude=${t.lat}&longitude=${t.lng}&current=temperature_2m,weather_code&timezone=auto`)
-                         .then(r=>r.json()).then(d=>{
-                             e.target.setPopupContent(`<b>${t.name}</b><br>${d.current.temperature_2m}°C <br> conditions`).openPopup();
-                         });
-                     });
-                });
-            }
-        },
-
-        fetchData: async () => {
-            const now = new Date();
-
-            // 1. ALERTS
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.alerts}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                const data = d.record;
-                // Filter Expired Alerts
-                const active = (data.blocks||[]).filter(b => new Date(b.endTime) > now);
-                
-                document.getElementById('alerts-overview').innerText = data.globalInfo?.overview || "";
-                const c = document.getElementById('alerts-feed'); c.innerHTML = '';
-                
-                if(active.length > 0) {
-                    document.getElementById('alert-banner').style.display = 'block';
-                    document.getElementById('alert-banner').innerHTML = `⚠️ ${active.length} Active Weather Alerts`;
-                    document.body.classList.add('has-alert');
-                    active.forEach(b => {
-                        c.innerHTML += `
-                        <div class="alert-card ${b.type==='Critical'?'crit':''}">
-                            <div class="ac-head">
-                                <span style="font-weight:800; font-size:1.1rem; color:${b.type==='Critical'?'#ef4444':'#f59e0b'}">${b.weatherType}</span>
-                                <span class="badge bg-${b.type}">${b.type} Risk</span>
-                            </div>
-                            <div class="ac-body">
-                                <div class="ac-meta">
-                                    <div><span class="ac-label">Affected Regions</span>${b.regions.join(', ')}</div>
-                                    <div><span class="ac-label">Valid Until</span>${new Date(b.endTime).toLocaleString()}</div>
-                                </div>
-                                <p style="white-space:pre-line;">${b.summary}</p>
-                            </div>
-                        </div>`;
-                    });
-                } else {
-                    c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">No active significant weather alerts.</div>';
-                }
-            });
-
-            // 2. STORMCAST
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.storm}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                const active = (d.record.outlooks||[]).filter(o => new Date(o.validUntil) > now);
-                const c = document.getElementById('storm-feed'); c.innerHTML = '';
-                if(!active.length) c.innerHTML = '<div style="text-align:center; color:#94a3b8">No active StormCast outlooks.</div>';
-                
-                active.forEach(o => {
-                    let regionsHtml = '';
-                    (o.regionalForecasts||[]).forEach(r => {
-                        regionsHtml += `
-                        <div class="fc-region">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                <strong>${r.regionName}</strong>
-                                <span class="badge bg-${r.riskLevel}">${r.riskLevel}</span>
-                            </div>
-                            <div style="font-size:0.8rem; color:#64748b; margin-bottom:8px;">${r.timing}</div>
-                            <div class="risk-tags">${(r.risks||[]).map(k=>`<span class="badge" style="background:#cbd5e1; color:#334155;">${k}</span>`).join('')}</div>
-                            <p style="font-size:0.9rem; margin-top:8px;">${r.threats}</p>
-                        </div>`;
-                    });
-
-                    c.innerHTML += `
-                    <div class="fc-wrap">
-                        <div class="fc-hero">
-                            <h2>${o.title}</h2>
-                            <div style="font-size:0.9rem; opacity:0.9; margin-top:5px;">Valid: ${new Date(o.validFrom).toLocaleString()} &rarr; ${new Date(o.validUntil).toLocaleString()}</div>
-                            <p style="margin-top:15px; max-width:700px;">${o.overallDiscussion}</p>
-                        </div>
-                        ${o.mapUrl ? `<img src="${o.mapUrl}" class="fc-map" onclick="document.getElementById('lb-img').src=this.src;document.getElementById('lb').style.display='flex'">` : ''}
-                        <div class="fc-grid">${regionsHtml}</div>
-                    </div>`;
-                });
-            });
-
-            // 3. SNOWCAST
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.snow}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                const data = d.record;
-                document.getElementById('sc-main-title').innerText = data.mainTitle || "SnowCast";
-                document.getElementById('sc-main-overview').innerText = data.overview || "";
-                
-                const active = (data.forecasts||[]).filter(f => new Date(f.validTo) > now);
-                const c = document.getElementById('snow-feed'); c.innerHTML = '';
-                
-                if(!active.length) c.innerHTML = '<div style="text-align:center; color:#94a3b8">No active SnowCast warnings.</div>';
-                
-                active.forEach(f => {
-                    c.innerHTML += `
-                    <div class="alert-card">
-                        <div class="ac-head">
-                            <strong>${f.region}</strong>
-                            <span class="badge bg-${f.riskLevel}">${f.riskLevel} Snow Risk</span>
-                        </div>
-                        <div class="ac-body">
-                            <div class="ac-meta"><div><span class="ac-label">Valid From</span>${new Date(f.validFrom).toLocaleString()}</div><div><span class="ac-label">Valid To</span>${new Date(f.validTo).toLocaleString()}</div></div>
-                            <p>${f.summary}</p>
-                        </div>
-                    </div>`;
-                });
-            });
-
-            // 4. SWO (Outlook)
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.sig}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                document.getElementById('swo-title').innerText = d.record.overallTitle || "";
-                document.getElementById('swo-summary').innerText = d.record.overallSummary || "";
-                const c = document.getElementById('outlook-container'); c.innerHTML = '';
-                
-                // Filter out days that are in the past (before today 00:00)
-                const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-                const active = (d.record.forecasts||[]).filter(f => new Date(f.date) >= todayStart);
-
-                active.forEach(f => {
-                    c.innerHTML += `
-                    <div class="swo-card">
-                        ${f.imageUrl ? `<img src="${f.imageUrl}" class="swo-img" onclick="document.getElementById('lb-img').src=this.src;document.getElementById('lb').style.display='flex'">` : ''}
-                        <div>
-                            <h3 style="margin-bottom:5px;">${new Date(f.date).toLocaleDateString('en-NZ', {weekday:'long', day:'numeric', month:'long'})}</h3>
-                            <span class="badge bg-${f.alertLevel}">${f.alertLevel || 'Low'} Risk</span>
-                            <p style="margin-top:10px; color:#475569;">${f.summary}</p>
-                        </div>
-                    </div>`;
-                });
-            });
-
-            // 5. NEWS (With Permalink Logic)
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.news}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                window.newsData = d.record.news || []; // Store globally for article view
-                const c = document.getElementById('news-feed'); c.innerHTML = '';
-                
-                // Sort by date (newest first)
-                window.newsData.sort((a,b) => new Date(b.scheduledAt) - new Date(a.scheduledAt));
-
-                window.newsData.forEach((n, i) => {
-                    // Determine "ID" - ideally use a real ID, here using timestamp of creation if avail, or index fallback
-                    const id = n.scheduledAt ? new Date(n.scheduledAt).getTime() : i;
-                    const snip = n.content.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...';
-                    
-                    c.innerHTML += `
-                    <div class="news-card" onclick="app.router('#/article/${id}')">
-                        <div class="nc-img" style="background-image:url('${n.titleImg && n.titleImg !== 'MOCK_URL' ? n.titleImg : 'logo.png'}')"></div>
-                        <div class="nc-body">
-                            <div class="nc-date">${new Date(n.scheduledAt).toLocaleDateString()} • ${n.tag}</div>
-                            <div class="nc-title">${n.title}</div>
-                            <p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">${snip}</p>
-                            <div class="nc-link">${n.linkText || 'Read Full Story &rarr;'}</div>
-                        </div>
-                    </div>`;
-                });
-            });
-
-            // 6. DROUGHT
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.drought}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                document.getElementById('dc-title').innerText = d.record.overview?.title || "";
-                document.getElementById('dc-sum').innerText = d.record.overview?.summary || "";
-                const c = document.getElementById('dc-feed'); c.innerHTML = '';
-                
-                (d.record.alerts||[]).forEach(a => {
-                    c.innerHTML += `
-                    <div class="dc-card">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <strong>${a.region}</strong>
-                            <span class="badge bg-${a.severity}">${a.severity}</span>
-                        </div>
-                        <div class="ac-meta"><div><span class="ac-label">Rain Potential</span>${a.rainPotential}</div><div><span class="ac-label">Expires</span>${new Date(a.endDate).toLocaleDateString()}</div></div>
-                        <p>${a.summary}</p>
-                    </div>`;
-                });
-            });
-        },
-
-        loadArticle: (id) => {
-            const c = document.getElementById('article-content');
-            c.innerHTML = '<p style="text-align:center">Loading article...</p>';
-            
-            // Wait a sec if data isn't loaded yet
-            if(!window.newsData) { setTimeout(() => app.loadArticle(id), 500); return; }
-
-            const art = window.newsData.find(n => (new Date(n.scheduledAt).getTime() == id));
-            
-            if(art) {
-                c.innerHTML = `
-                    <div class="art-header">
-                        <div style="color:#94a3b8; font-size:0.9rem; text-transform:uppercase; font-weight:700; margin-bottom:10px;">${art.tag} • ${new Date(art.scheduledAt).toLocaleDateString()}</div>
-                        <h1 style="font-size:2rem; color:#0f172a; max-width:800px; margin:0 auto;">${art.title}</h1>
-                    </div>
-                    ${art.titleImg && art.titleImg !== 'MOCK_URL' ? `<img src="${art.titleImg}" class="art-img">` : ''}
-                    <div class="art-body">${art.content}</div>
-                `;
-            } else {
-                c.innerHTML = '<p style="text-align:center; color:red;">Article not found.</p>';
-            }
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', app.init);
-</script>
-</body>
-</html>
+            <iframe src="https://embed.windy.com/embed2.html?lat=-43.5&lon=171.5&zoom=6&level=surface&overlay=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&
