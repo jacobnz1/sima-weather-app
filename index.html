@@ -20,8 +20,11 @@
             --primary: #0f172a; --accent: #0ea5e9; --bg: #f8fafc; 
             --text: #334155; --card-bg: #ffffff; --border: #e2e8f0;
             /* RISK COLORS */
-            --risk-slight: #facc15; --risk-enhanced: #f97316; 
-            --risk-high: #ef4444; --risk-critical: #a855f7; --risk-special: #3b82f6;
+            --risk-slight: #facc15;   /* Yellow */
+            --risk-enhanced: #f97316; /* Orange */
+            --risk-high: #ef4444;     /* Red */
+            --risk-critical: #a855f7; /* Purple */
+            --risk-special: #3b82f6;  /* Blue */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-top: 70px; line-height: 1.6; }
@@ -34,6 +37,7 @@
         
         /* BADGES & BORDERS */
         .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        
         .bg-Slight { background: var(--risk-slight); color: #000; text-shadow: none; } 
         .bg-Enhanced { background: var(--risk-enhanced); } 
         .bg-High { background: var(--risk-high); } 
@@ -54,13 +58,15 @@
         .brand img { height: 45px; width: auto; }
         .d-menu { display: none; gap: 20px; } @media(min-width: 950px) { .d-menu { display: flex; } }
         .nav-link { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); text-decoration: none; } .nav-link:hover { color: var(--accent); }
+        
         .nav-btn-refresh { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
         .nav-btn-refresh:hover { background: #e2e8f0; }
+
         .m-toggle { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; } @media(min-width: 950px) { .m-toggle { display: none; } }
         .m-menu { position: fixed; top: 70px; right: 0; width: 250px; height: 100vh; background: white; transform: translateX(100%); transition: 0.3s; padding: 20px; border-left: 1px solid var(--border); z-index: 999; display: flex; flex-direction: column; gap: 15px; } .m-menu.open { transform: translateX(0); }
 
         /* --- COMPONENTS --- */
-        .alert-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--risk-mod); border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .alert-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--risk-special); border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
         .ac-head { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .ac-body { padding: 20px; }
         .ac-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; font-size: 0.9rem; }
@@ -73,9 +79,7 @@
         .fc-region { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); border-left: 4px solid transparent; }
         .risk-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
         
-        /* UPDATED SWO (LARGER MAPS) */
         .swo-card { display: flex; gap: 25px; background: white; border: 1px solid var(--border); padding: 25px; border-radius: 10px; margin-bottom: 20px; align-items: start; }
-        /* Increased from 120px to 220px for Desktop */
         .swo-img { width: 220px; height: 220px; object-fit: cover; border-radius: 8px; background: #e2e8f0; flex-shrink: 0; cursor: pointer; border: 1px solid #e2e8f0; }
         @media(max-width: 700px) { 
             .swo-card { flex-direction: column; } 
@@ -318,7 +322,8 @@
     const CONFIG = { news:'69238031d0ea881f40fb9d04', sig:'68d8c3c6d0ea881f408d7a5c', storm:'68d8cdac43b1c97be9528f9b', snow:'68e0738e43b1c97be9599eb1', alerts:'68db095dae596e708f0072be', drought:'68d9fc07d0ea881f408e8e5b', key: '$2a$10$/h3xvps5BAmoU8dJigw8T.qYg3eoESVLwjXbX9aHmb85Y96cExsCe' };
     
     // --- CONFIGURATION FOR BLOGGER ---
-    const BLOGGER_RSS = 'https://southislandmet.blogspot.com/feeds/posts/default?alt=json';
+    // Using rss2json public proxy with encoded URL to avoid CORS and ensure stability
+    const BLOGGER_RSS = 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fsouthislandmet.blogspot.com%2Ffeeds%2Fposts%2Fdefault';
     
     const getFresh = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
     
@@ -508,27 +513,30 @@
                 const res = await fetch(BLOGGER_RSS);
                 const json = await res.json();
                 
-                if(json.feed && json.feed.entry) {
-                    window.newsData = json.feed.entry.map(entry => {
-                        // Extract ID from the tag:blogger.com,1999:blog-ID.post-ID format
-                        const id = entry.id.$t.split('post-')[1];
-                        
+                if(json.items) {
+                    window.newsData = json.items.map(entry => {
                         // Extract Image (Media Thumbnail or First Image in Content)
                         let img = 'logo.png';
-                        if (entry.media$thumbnail) {
-                            img = entry.media$thumbnail.url.replace('s72-c', 's600'); // Get larger image
-                        } else if (entry.content && entry.content.$t) {
-                            const match = entry.content.$t.match(/src="(.*?)"/);
+                        if (entry.thumbnail) {
+                            img = entry.thumbnail;
+                        } else if (entry.enclosure && entry.enclosure.link) {
+                            img = entry.enclosure.link;
+                        } else if (entry.content) {
+                            const match = entry.content.match(/src="([^"]+)"/);
                             if (match) img = match[1];
                         }
 
+                        // Extract ID from GUID (usually the last part of the URL or a unique string)
+                        const id = entry.guid.split('/').pop();
+
                         return {
                             id: id,
-                            title: entry.title.$t,
-                            date: new Date(entry.published.$t).toLocaleDateString(),
-                            content: entry.content.$t,
+                            title: entry.title,
+                            date: new Date(entry.pubDate).toLocaleDateString(),
+                            content: entry.content,
                             img: img,
-                            tag: (entry.category && entry.category.length > 0) ? entry.category[0].term : 'Update'
+                            // Use the first category as a tag, or 'Update' if none
+                            tag: (entry.categories && entry.categories.length > 0) ? entry.categories[0] : 'Update'
                         };
                     });
                     
@@ -590,7 +598,7 @@
         fetchData: async () => {
             const now = new Date();
 
-            // ALERTS
+            // 1. ALERTS
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.alerts}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 const data = d.record;
                 const active = (data.blocks||[]).filter(b => new Date(b.endTime) > now);
@@ -606,7 +614,7 @@
                 } else { c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">No active significant weather alerts.</div>'; }
             });
 
-            // STORMCAST
+            // 2. STORMCAST
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.storm}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 const active = (d.record.outlooks||[]).filter(o => new Date(o.validUntil) > now);
                 const c = document.getElementById('storm-feed'); c.innerHTML = '';
@@ -620,7 +628,7 @@
                 });
             });
 
-            // SNOWCAST
+            // 3. SNOWCAST
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.snow}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 const data = d.record;
                 document.getElementById('sc-main-title').innerText = data.mainTitle || "SnowCast";
@@ -631,7 +639,7 @@
                 active.forEach(f => { c.innerHTML += `<div class="alert-card border-${f.riskLevel}"><div class="ac-head"><strong>${f.region}</strong><span class="badge bg-${f.riskLevel}">${f.riskLevel} Snow Risk</span></div><div class="ac-body"><div class="ac-meta"><div><span class="ac-label">Valid From</span>${new Date(f.validFrom).toLocaleString()}</div><div><span class="ac-label">Valid To</span>${new Date(f.validTo).toLocaleString()}</div></div><p>${f.summary}</p></div></div>`; });
             });
 
-            // SWO
+            // 4. SWO
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.sig}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 document.getElementById('swo-title').innerText = d.record.overallTitle || "";
                 document.getElementById('swo-summary').innerText = d.record.overallSummary || "";
@@ -641,14 +649,14 @@
                 active.forEach(f => { c.innerHTML += `<div class="swo-card border-${f.alertLevel}">${f.imageUrl ? `<img src="${f.imageUrl}" class="swo-img" onclick="document.getElementById('lb-img').src=this.src;document.getElementById('lb').style.display='flex'">` : ''}<div><h3 style="margin-bottom:5px;">${new Date(f.date).toLocaleDateString('en-NZ', {weekday:'long', day:'numeric', month:'long'})}</h3><span class="badge bg-${f.alertLevel}">${f.alertLevel || 'Low'} Risk</span><p style="margin-top:10px; color:#475569;">${f.summary}</p></div></div>`; });
             });
 
-            // DROUGHT
+            // 5. DROUGHT (Blogger logic is separate)
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.drought}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 document.getElementById('dc-title').innerText = d.record.overview?.title || "";
                 document.getElementById('dc-sum').innerText = d.record.overview?.summary || "";
                 const c = document.getElementById('dc-feed'); c.innerHTML = '';
                 (d.record.alerts||[]).forEach(a => { c.innerHTML += `<div class="dc-card"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><strong>${a.region}</strong><span class="badge bg-${a.severity}">${a.severity}</span></div><div class="ac-meta"><div><span class="ac-label">Rain Potential</span>${a.rainPotential}</div><div><span class="ac-label">Expires</span>${new Date(a.endDate).toLocaleDateString()}</div></div><p>${a.summary}</p></div>`; });
             });
-        }
+        },
     };
 
     document.addEventListener('DOMContentLoaded', app.init);
