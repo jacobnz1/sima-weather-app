@@ -99,6 +99,7 @@
             color: #1e293b !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             line-height: 1.5; width: 100%; border-radius: 24px; overflow: hidden; position: relative; z-index: 1; text-align: left;
+            border: 1px solid #e2e8f0;
         }
         #si-weather-root img, #si-weather-root svg, #si-weather-root .leaflet-tile-pane, #si-weather-root .leaflet-tile, #si-weather-root .leaflet-layer, #si-weather-root .leaflet-pane {
             filter: none !important; -webkit-filter: none !important; mix-blend-mode: normal !important; opacity: 1 !important;
@@ -106,7 +107,7 @@
         #si-weather-root .si-sidebar, #si-weather-root .modal-card, #si-weather-root .modal-header, #si-weather-root .ext-card, #si-weather-root .stat-box, #si-weather-root .si-input {
             background-color: #ffffff !important;
         }
-        #si-hub { display: flex; width: 100%; height: 850px; background: #ffffff; border: 1px solid #e2e8f0; position: relative; }
+        #si-hub { display: flex; width: 100%; height: 850px; background: #ffffff; position: relative; }
         #si-hub * { box-sizing: border-box; }
         .si-sidebar { width: 400px; background: #ffffff; border-right: 1px solid #f1f5f9; padding: 32px; display: flex; flex-direction: column; gap: 28px; flex-shrink: 0; z-index: 10; position: relative; }
         .si-header h2 { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
@@ -375,31 +376,31 @@
     const CONFIG = { news:'69238031d0ea881f40fb9d04', sig:'68d8c3c6d0ea881f408d7a5c', storm:'68d8cdac43b1c97be9528f9b', snow:'68e0738e43b1c97be9599eb1', alerts:'68db095dae596e708f0072be', drought:'68d9fc07d0ea881f408e8e5b', key: '$2a$10$/h3xvps5BAmoU8dJigw8T.qYg3eoESVLwjXbX9aHmb85Y96cExsCe' };
     const getFresh = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
     
-    // --- FORECAST WIDGET LOGIC ---
-    const forecastWidget = (function(){
-      const towns = [
-        { name: "Nelson", lat: -41.2706, lng: 173.2840 }, { name: "Blenheim", lat: -41.5134, lng: 173.9612 },
-        { name: "Takaka", lat: -40.8500, lng: 172.8000 }, { name: "Westport", lat: -41.7545, lng: 171.6058 },
-        { name: "Greymouth", lat: -42.4500, lng: 171.2000 }, { name: "Hokitika", lat: -42.7173, lng: 170.9656 },
-        { name: "Kaikoura", lat: -42.4008, lng: 173.6815 }, { name: "Hanmer Springs", lat: -42.5167, lng: 172.8167 },
-        { name: "Christchurch", lat: -43.5321, lng: 172.6362 }, { name: "Ashburton", lat: -43.9006, lng: 171.7400 },
-        { name: "Timaru", lat: -44.3931, lng: 171.2508 }, { name: "Tekapo", lat: -44.0047, lng: 170.4771 },
-        { name: "Mt Cook", lat: -43.7333, lng: 170.1000 }, { name: "Wanaka", lat: -44.7000, lng: 169.1500 },
-        { name: "Queenstown", lat: -45.0312, lng: 168.6626 }, { name: "Alexandra", lat: -45.2492, lng: 169.3797 },
-        { name: "Milford Sound", lat: -44.6414, lng: 167.8974 }, { name: "Oamaru", lat: -45.0975, lng: 170.9690 },
-        { name: "Dunedin", lat: -45.8788, lng: 170.5028 }, { name: "Balclutha", lat: -46.2333, lng: 169.7333 },
-        { name: "Gore", lat: -46.1028, lng: 168.9436 }, { name: "Invercargill", lat: -46.4132, lng: 168.3538 },
-        { name: "Stewart Is.", lat: -46.8967, lng: 168.1265 }
-      ];
-      const CORRECTION_FACTORS = {
-        "Queenstown": { temp: 1.0, wind: 1.2, rain: 1.0 }, 
-        "Wanaka": { temp: 1.0, wind: 1.0, rain: 0.9 },
-        "Christchurch": { temp: 0, wind: 1.1, rain: 1.0 },
-        "Wellington": { temp: 0, wind: 1.3, rain: 1.0 },
-      };
-      let globalData = [];
+    // --- FORECAST WIDGET DATA ---
+    const towns = [
+      { name: "Nelson", lat: -41.2706, lng: 173.2840 }, { name: "Blenheim", lat: -41.5134, lng: 173.9612 },
+      { name: "Takaka", lat: -40.8500, lng: 172.8000 }, { name: "Westport", lat: -41.7545, lng: 171.6058 },
+      { name: "Greymouth", lat: -42.4500, lng: 171.2000 }, { name: "Hokitika", lat: -42.7173, lng: 170.9656 },
+      { name: "Kaikoura", lat: -42.4008, lng: 173.6815 }, { name: "Hanmer Springs", lat: -42.5167, lng: 172.8167 },
+      { name: "Christchurch", lat: -43.5321, lng: 172.6362 }, { name: "Ashburton", lat: -43.9006, lng: 171.7400 },
+      { name: "Timaru", lat: -44.3931, lng: 171.2508 }, { name: "Tekapo", lat: -44.0047, lng: 170.4771 },
+      { name: "Mt Cook", lat: -43.7333, lng: 170.1000 }, { name: "Wanaka", lat: -44.7000, lng: 169.1500 },
+      { name: "Queenstown", lat: -45.0312, lng: 168.6626 }, { name: "Alexandra", lat: -45.2492, lng: 169.3797 },
+      { name: "Milford Sound", lat: -44.6414, lng: 167.8974 }, { name: "Oamaru", lat: -45.0975, lng: 170.9690 },
+      { name: "Dunedin", lat: -45.8788, lng: 170.5028 }, { name: "Balclutha", lat: -46.2333, lng: 169.7333 },
+      { name: "Gore", lat: -46.1028, lng: 168.9436 }, { name: "Invercargill", lat: -46.4132, lng: 168.3538 },
+      { name: "Stewart Is.", lat: -46.8967, lng: 168.1265 }
+    ];
+    const CORRECTION_FACTORS = {
+      "Queenstown": { temp: 1.0, wind: 1.2, rain: 1.0 }, 
+      "Wanaka": { temp: 1.0, wind: 1.0, rain: 0.9 },
+      "Christchurch": { temp: 0, wind: 1.1, rain: 1.0 },
+      "Wellington": { temp: 0, wind: 1.3, rain: 1.0 },
+    };
+    let globalData = [];
 
-      const ui = {
+    // --- UI HELPERS ---
+    const ui = {
         getIcon: (code) => {
           const pSun = `<circle cx="12" cy="12" r="5" fill="#f6e05e"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#ecc94b" stroke-width="2"/>`;
           const pCloud = `<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" fill="#e2e8f0" stroke="#cbd5e0" stroke-width="2"/>`;
@@ -457,125 +458,17 @@
           document.getElementById('x-wind').innerText = Math.round(maxW) + " kph"; document.getElementById('loc-wind').innerText = lW;
           document.getElementById('x-rain').innerText = maxR.toFixed(1) + " mm"; document.getElementById('loc-rain').innerText = lR;
         }
-      };
-
-      // Expose UI for button clicks
-      window.ui = ui;
-
-      function init() {
-        const map = L.map('si-map', { zoomControl: false, scrollWheelZoom: false, attributionControl: false });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-        map.fitBounds([[-40.4, 166.0], [-47.5, 174.5]], { padding: [20, 20] });
-
-        const lats = towns.map(l => l.lat).join(',');
-        const lngs = towns.map(l => l.lng).join(',');
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m,wind_speed_10m,wind_direction_10m,weather_code,relative_humidity_2m,apparent_temperature&hourly=temperature_2m,wind_gusts_10m,precipitation,weather_code,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Pacific%2FAuckland`;
-
-        fetch(url).then(r => r.json()).then(data => {
-          globalData = Array.isArray(data) ? data : [data];
-          globalData.forEach((d, i) => {
-            const t = towns[i];
-            const factors = CORRECTION_FACTORS[t.name] || { temp: 0 };
-            const displayTemp = Math.round(d.current.temperature_2m + factors.temp);
-            const m = L.marker([t.lat, t.lng], {
-              icon: L.divIcon({
-                className: 'd',
-                html: `<div class="si-marker"><span class="name">${t.name}</span><span class="temp">${displayTemp}°</span></div>`,
-                iconSize: [null, null], iconAnchor: [40, 15]
-              })
-            }).addTo(map);
-            m.on('click', () => openModal(t, d));
-          });
-          ui.toggleExt('cur');
-        });
-
-        function openModal(town, data) {
-          const c = data.current;
-          const h = data.hourly;
-          const d = data.daily;
-          const nowH = new Date().getHours();
-          const factors = CORRECTION_FACTORS[town.name] || { temp: 0, wind: 1.0, rain: 1.0 };
-          const adjTemp = c.temperature_2m + factors.temp;
-          const rainSoFar = h.precipitation.slice(0, nowH+1).reduce((a,b)=>a+b,0);
-          const windSoFar = Math.max(...h.wind_gusts_10m.slice(0, nowH+1).map(w => w * factors.wind));
-          const maxSoFar = Math.max(...h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp));
-          const minSoFar = Math.min(...h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp));
-          let fcMax = d.temperature_2m_max[0] + factors.temp;
-          if(adjTemp > fcMax) { fcMax = Math.round(adjTemp) + 1; }
-          const wCode = c.weather_code;
-          let desc = "cloudy";
-          if([0,1].includes(wCode)) desc = "clear and sunny"; else if([2,3].includes(wCode)) desc = "partly cloudy"; else if(wCode >= 51) desc = "rainy";
-          const windDir = ui.getDir(c.wind_direction_10m);
-          const summary = `Currently ${desc}, ${Math.round(adjTemp)}°C. Wind ${windDir} at ${Math.round(c.wind_speed_10m * factors.wind)} kph. Rain today: ${rainSoFar.toFixed(1)}mm.`;
-
-          document.getElementById('m-city').innerText = town.name;
-          
-          let html = `
-            <div class="obs-hero">
-              <div class="obs-icon">${ui.getIcon(c.weather_code)}</div>
-              <div class="obs-temp">${Math.round(adjTemp)}°</div>
-              <div class="obs-text">${summary}</div>
-            </div>
-            <div class="section-title">Observations Since Midnight</div>
-            <div class="stats-grid">
-              <div class="stat-box"><span class="st-lbl">Rainfall</span><span class="st-val">${rainSoFar.toFixed(1)} mm</span></div>
-              <div class="stat-box"><span class="st-lbl">Max Temp</span><span class="st-val">${Math.round(maxSoFar)}°</span></div>
-              <div class="stat-box"><span class="st-lbl">Min Temp</span><span class="st-val">${Math.round(minSoFar)}°</span></div>
-              <div class="stat-box"><span class="st-lbl">Peak Gust</span><span class="st-val">${Math.round(windSoFar)} kph</span></div>
-            </div>
-            <div class="section-title">Next 24 Hours</div>
-            <div class="hourly-scroll">`;
-          
-          for(let i=nowH; i<nowH+24; i++) {
-            if(!h.time[i]) break;
-            const tTime = new Date(h.time[i]).getHours() + ":00";
-            const tTemp = Math.round(h.temperature_2m[i] + factors.temp);
-            const tDir = ui.getDir(h.wind_direction_10m[i]);
-            html += `<div class="h-card"><div class="h-time">${tTime}</div><div class="h-icon">${ui.getIcon(h.weather_code[i])}</div><div class="h-temp">${tTemp}°</div><div class="h-wind">${tDir}</div></div>`;
-          }
-          html += `</div><div class="section-title">5-Day Forecast</div><div class="d-list">`;
-          for(let i=0; i<5; i++) {
-            const dayName = i===0 ? "Today" : new Date(d.time[i]).toLocaleDateString('en-NZ',{weekday:'short'});
-            const displayMax = i===0 ? Math.round(fcMax) : Math.round(d.temperature_2m_max[i] + factors.temp);
-            const displayMin = Math.round(d.temperature_2m_min[i] + factors.temp);
-            html += `<div class="d-row"><div class="d-day">${dayName}</div><div class="d-icon">${ui.getIcon(d.weather_code[i])}</div><div class="d-sum">${ui.getIcon(d.weather_code[i]).includes('rain') ? 'Rain likely' : 'Clear skies'}</div><div class="d-temps">${displayMax}° / ${displayMin}°</div></div>`;
-          }
-          html += `</div>`;
-          document.getElementById('m-body').innerHTML = html;
-          document.getElementById('modal-overlay').classList.add('active');
-        }
-
-        const input = document.getElementById('si-input');
-        const dd = document.getElementById('si-dd');
-        input.addEventListener('input', (e) => {
-          const v = e.target.value.toLowerCase();
-          dd.innerHTML = '';
-          if(v.length < 1) { dd.style.display='none'; return; }
-          const m = towns.filter(t => t.name.toLowerCase().includes(v));
-          if(m.length) {
-            dd.style.display='block';
-            m.forEach((t) => {
-              const realIdx = towns.findIndex(x => x.name === t.name);
-              const div = document.createElement('div');
-              div.className = 'si-dd-item'; div.innerText = t.name;
-              div.onclick = () => { input.value = t.name; dd.style.display='none'; openModal(t, globalData[realIdx]); };
-              dd.appendChild(div);
-            });
-          } else dd.style.display='none';
-        });
-
-        document.getElementById('m-close').onclick = () => document.getElementById('modal-overlay').classList.remove('active');
-        document.getElementById('modal-overlay').onclick = (e) => { if(e.target.id==='modal-overlay') e.target.classList.remove('active'); };
-      }
-      return { init };
-    })();
+    };
+    
+    // Expose UI for onclick handlers
+    window.ui = ui;
 
     const app = {
         init: () => { 
             app.fetchData(); 
             window.addEventListener('hashchange', app.route);
             window.addEventListener('load', app.route);
-            forecastWidget.init(); // Init the new map widget
+            app.initMapWidget();
         },
         route: () => {
             const h = window.location.hash || '#/';
@@ -594,6 +487,114 @@
             window.scrollTo(0,0);
         },
         router: (p) => window.location.hash = p,
+        
+        initMapWidget: () => {
+            const map = L.map('si-map', { zoomControl: false, scrollWheelZoom: false, attributionControl: false });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+            map.fitBounds([[-40.4, 166.0], [-47.5, 174.5]], { padding: [20, 20] });
+
+            const lats = towns.map(l => l.lat).join(',');
+            const lngs = towns.map(l => l.lng).join(',');
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m,wind_speed_10m,wind_direction_10m,weather_code,relative_humidity_2m,apparent_temperature&hourly=temperature_2m,wind_gusts_10m,precipitation,weather_code,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Pacific%2FAuckland`;
+
+            fetch(url).then(r => r.json()).then(data => {
+                globalData = Array.isArray(data) ? data : [data];
+                globalData.forEach((d, i) => {
+                    const t = towns[i];
+                    const factors = CORRECTION_FACTORS[t.name] || { temp: 0 };
+                    const displayTemp = Math.round(d.current.temperature_2m + factors.temp);
+                    const m = L.marker([t.lat, t.lng], {
+                        icon: L.divIcon({
+                            className: 'd',
+                            html: `<div class="si-marker"><span class="name">${t.name}</span><span class="temp">${displayTemp}°</span></div>`,
+                            iconSize: [null, null], iconAnchor: [40, 15]
+                        })
+                    }).addTo(map);
+                    m.on('click', () => app.openForecastModal(t, d));
+                });
+                ui.toggleExt('cur');
+            });
+
+            // Setup Search Input
+            const input = document.getElementById('si-input');
+            const dd = document.getElementById('si-dd');
+            input.addEventListener('input', (e) => {
+                const v = e.target.value.toLowerCase();
+                dd.innerHTML = '';
+                if(v.length < 1) { dd.style.display='none'; return; }
+                const m = towns.filter(t => t.name.toLowerCase().includes(v));
+                if(m.length) {
+                    dd.style.display='block';
+                    m.forEach((t) => {
+                        const realIdx = towns.findIndex(x => x.name === t.name);
+                        const div = document.createElement('div');
+                        div.className = 'si-dd-item'; div.innerText = t.name;
+                        div.onclick = () => { input.value = t.name; dd.style.display='none'; app.openForecastModal(t, globalData[realIdx]); };
+                        dd.appendChild(div);
+                    });
+                } else dd.style.display='none';
+            });
+
+            // Close Modal Listeners
+            document.getElementById('m-close').onclick = () => document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('modal-overlay').onclick = (e) => { if(e.target.id==='modal-overlay') e.target.classList.remove('active'); };
+        },
+
+        openForecastModal: (town, data) => {
+            const c = data.current;
+            const h = data.hourly;
+            const d = data.daily;
+            const nowH = new Date().getHours();
+            const factors = CORRECTION_FACTORS[town.name] || { temp: 0, wind: 1.0, rain: 1.0 };
+            const adjTemp = c.temperature_2m + factors.temp;
+            const rainSoFar = h.precipitation.slice(0, nowH+1).reduce((a,b)=>a+b,0);
+            const windSoFar = Math.max(...h.wind_gusts_10m.slice(0, nowH+1).map(w => w * factors.wind));
+            const maxSoFar = Math.max(...h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp));
+            const minSoFar = Math.min(...h.temperature_2m.slice(0, nowH+1).map(t => t + factors.temp));
+            let fcMax = d.temperature_2m_max[0] + factors.temp;
+            if(adjTemp > fcMax) { fcMax = Math.round(adjTemp) + 1; }
+            const wCode = c.weather_code;
+            let desc = "cloudy";
+            if([0,1].includes(wCode)) desc = "clear and sunny"; else if([2,3].includes(wCode)) desc = "partly cloudy"; else if(wCode >= 51) desc = "rainy";
+            const windDir = ui.getDir(c.wind_direction_10m);
+            const summary = `Currently ${desc}, ${Math.round(adjTemp)}°C. Wind ${windDir} at ${Math.round(c.wind_speed_10m * factors.wind)} kph. Rain today: ${rainSoFar.toFixed(1)}mm.`;
+
+            document.getElementById('m-city').innerText = town.name;
+            
+            let html = `
+                <div class="obs-hero">
+                    <div class="obs-icon">${ui.getIcon(c.weather_code)}</div>
+                    <div class="obs-temp">${Math.round(adjTemp)}°</div>
+                    <div class="obs-text">${summary}</div>
+                </div>
+                <div class="section-title">Observations Since Midnight</div>
+                <div class="stats-grid">
+                    <div class="stat-box"><span class="st-lbl">Rainfall</span><span class="st-val">${rainSoFar.toFixed(1)} mm</span></div>
+                    <div class="stat-box"><span class="st-lbl">Max Temp</span><span class="st-val">${Math.round(maxSoFar)}°</span></div>
+                    <div class="stat-box"><span class="st-lbl">Min Temp</span><span class="st-val">${Math.round(minSoFar)}°</span></div>
+                    <div class="stat-box"><span class="st-lbl">Peak Gust</span><span class="st-val">${Math.round(windSoFar)} kph</span></div>
+                </div>
+                <div class="section-title">Next 24 Hours</div>
+                <div class="hourly-scroll">`;
+            
+            for(let i=nowH; i<nowH+24; i++) {
+                if(!h.time[i]) break;
+                const tTime = new Date(h.time[i]).getHours() + ":00";
+                const tTemp = Math.round(h.temperature_2m[i] + factors.temp);
+                const tDir = ui.getDir(h.wind_direction_10m[i]);
+                html += `<div class="h-card"><div class="h-time">${tTime}</div><div class="h-icon">${ui.getIcon(h.weather_code[i])}</div><div class="h-temp">${tTemp}°</div><div class="h-wind">${tDir}</div></div>`;
+            }
+            html += `</div><div class="section-title">5-Day Forecast</div><div class="d-list">`;
+            for(let i=0; i<5; i++) {
+                const dayName = i===0 ? "Today" : new Date(d.time[i]).toLocaleDateString('en-NZ',{weekday:'short'});
+                const displayMax = i===0 ? Math.round(fcMax) : Math.round(d.temperature_2m_max[i] + factors.temp);
+                const displayMin = Math.round(d.temperature_2m_min[i] + factors.temp);
+                html += `<div class="d-row"><div class="d-day">${dayName}</div><div class="d-icon">${ui.getIcon(d.weather_code[i])}</div><div class="d-sum">${ui.getIcon(d.weather_code[i]).includes('rain') ? 'Rain likely' : 'Clear skies'}</div><div class="d-temps">${displayMax}° / ${displayMin}°</div></div>`;
+            }
+            html += `</div>`;
+            document.getElementById('m-body').innerHTML = html;
+            document.getElementById('modal-overlay').classList.add('active');
+        },
         
         fetchData: async () => {
             const now = new Date();
