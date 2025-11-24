@@ -54,10 +54,8 @@
         .brand img { height: 45px; width: auto; }
         .d-menu { display: none; gap: 20px; } @media(min-width: 950px) { .d-menu { display: flex; } }
         .nav-link { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); text-decoration: none; } .nav-link:hover { color: var(--accent); }
-        
         .nav-btn-refresh { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
         .nav-btn-refresh:hover { background: #e2e8f0; }
-
         .m-toggle { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; } @media(min-width: 950px) { .m-toggle { display: none; } }
         .m-menu { position: fixed; top: 70px; right: 0; width: 250px; height: 100vh; background: white; transform: translateX(100%); transition: 0.3s; padding: 20px; border-left: 1px solid var(--border); z-index: 999; display: flex; flex-direction: column; gap: 15px; } .m-menu.open { transform: translateX(0); }
 
@@ -75,9 +73,14 @@
         .fc-region { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); border-left: 4px solid transparent; }
         .risk-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
         
-        .swo-card { display: flex; gap: 20px; background: white; border: 1px solid var(--border); padding: 20px; border-radius: 10px; margin-bottom: 20px; align-items: start; }
-        @media(max-width: 600px) { .swo-card { flex-direction: column; } }
-        .swo-img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; background: #e2e8f0; flex-shrink: 0; cursor: pointer; }
+        /* UPDATED SWO (LARGER MAPS) */
+        .swo-card { display: flex; gap: 25px; background: white; border: 1px solid var(--border); padding: 25px; border-radius: 10px; margin-bottom: 20px; align-items: start; }
+        /* Increased from 120px to 220px for Desktop */
+        .swo-img { width: 220px; height: 220px; object-fit: cover; border-radius: 8px; background: #e2e8f0; flex-shrink: 0; cursor: pointer; border: 1px solid #e2e8f0; }
+        @media(max-width: 700px) { 
+            .swo-card { flex-direction: column; } 
+            .swo-img { width: 100%; height: auto; max-height: 250px; }
+        }
         
         /* NEWS LAYOUT */
         .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
@@ -313,6 +316,10 @@
 
 <script>
     const CONFIG = { news:'69238031d0ea881f40fb9d04', sig:'68d8c3c6d0ea881f408d7a5c', storm:'68d8cdac43b1c97be9528f9b', snow:'68e0738e43b1c97be9599eb1', alerts:'68db095dae596e708f0072be', drought:'68d9fc07d0ea881f408e8e5b', key: '$2a$10$/h3xvps5BAmoU8dJigw8T.qYg3eoESVLwjXbX9aHmb85Y96cExsCe' };
+    
+    // --- CONFIGURATION FOR BLOGGER ---
+    const BLOGGER_RSS = 'https://southislandmet.blogspot.com/feeds/posts/default?alt=json';
+    
     const getFresh = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
     
     /* --- HOME WIDGET LOGIC --- */
@@ -334,7 +341,7 @@
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
             }
             const lats = towns.map(t=>t.lat).join(','); const lngs = towns.map(t=>t.lng).join(',');
-            const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m,weather_code,relative_humidity_2m,apparent_temperature,surface_pressure&hourly=temperature_2m,wind_gusts_10m,precipitation,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,uv_index_max,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant&timezone=Pacific%2FAuckland`;
+            const u = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,precipitation,wind_gusts_10m&hourly=temperature_2m,wind_gusts_10m,precipitation&timezone=Pacific%2FAuckland`;
             const r = await fetch(u); const d = await r.json();
             globalData = Array.isArray(d) ? d : [d];
             globalData.forEach((data, i) => {
@@ -465,13 +472,14 @@
         return { init, switchExt };
     })();
 
-    /* --- APP ROUTER --- */
+    /* --- APP ROUTER & BLOGGER FETCHER --- */
     const app = {
         init: () => { 
             app.fetchData(); 
             window.addEventListener('hashchange', app.route);
             window.addEventListener('load', app.route);
             siWidget.init();
+            app.fetchBloggerPosts();
         },
         route: () => {
             const h = window.location.hash || '#/';
@@ -494,10 +502,95 @@
         },
         router: (p) => window.location.hash = p,
         
+        // --- BLOGGER INTEGRATION ---
+        fetchBloggerPosts: async () => {
+            try {
+                const res = await fetch(BLOGGER_RSS);
+                const json = await res.json();
+                
+                if(json.feed && json.feed.entry) {
+                    window.newsData = json.feed.entry.map(entry => {
+                        // Extract ID from the tag:blogger.com,1999:blog-ID.post-ID format
+                        const id = entry.id.$t.split('post-')[1];
+                        
+                        // Extract Image (Media Thumbnail or First Image in Content)
+                        let img = 'logo.png';
+                        if (entry.media$thumbnail) {
+                            img = entry.media$thumbnail.url.replace('s72-c', 's600'); // Get larger image
+                        } else if (entry.content && entry.content.$t) {
+                            const match = entry.content.$t.match(/src="(.*?)"/);
+                            if (match) img = match[1];
+                        }
+
+                        return {
+                            id: id,
+                            title: entry.title.$t,
+                            date: new Date(entry.published.$t).toLocaleDateString(),
+                            content: entry.content.$t,
+                            img: img,
+                            tag: (entry.category && entry.category.length > 0) ? entry.category[0].term : 'Update'
+                        };
+                    });
+                    
+                    // Render Home Feed (Top 3)
+                    const homeC = document.getElementById('home-news-feed');
+                    homeC.innerHTML = '';
+                    window.newsData.slice(0, 3).forEach(item => {
+                        homeC.innerHTML += `
+                        <div class="news-card" onclick="app.router('#/article/${item.id}')">
+                            <div class="nc-img" style="background-image:url('${item.img}')"><span class="nc-tag">${item.tag}</span></div>
+                            <div class="nc-body">
+                                <div class="nc-date">${item.date}</div>
+                                <div class="nc-title">${item.title}</div>
+                                <div class="nc-link">Read More &rarr;</div>
+                            </div>
+                        </div>`;
+                    });
+
+                    // Render News Page Feed (All)
+                    const newsC = document.getElementById('news-feed');
+                    newsC.innerHTML = '';
+                    window.newsData.forEach(item => {
+                        newsC.innerHTML += `
+                        <div class="news-card" onclick="app.router('#/article/${item.id}')">
+                            <div class="nc-img" style="background-image:url('${item.img}')"><span class="nc-tag">${item.tag}</span></div>
+                            <div class="nc-body">
+                                <div class="nc-date">${item.date}</div>
+                                <div class="nc-title">${item.title}</div>
+                                <div class="nc-link">Read More &rarr;</div>
+                            </div>
+                        </div>`;
+                    });
+                }
+            } catch(e) { console.error("Blogger Fetch Error", e); }
+        },
+
+        loadArticle: (id) => {
+            const c = document.getElementById('article-content');
+            c.innerHTML = '<p style="text-align:center">Loading article...</p>';
+            
+            if(!window.newsData) { setTimeout(() => app.loadArticle(id), 500); return; }
+            
+            // Find article by ID
+            const art = window.newsData.find(n => n.id === id);
+            
+            if(art) {
+                c.innerHTML = `
+                    <div class="art-header">
+                        <div style="color:#94a3b8; font-size:0.9rem; text-transform:uppercase; font-weight:700; margin-bottom:10px;">${art.date} • ${art.tag}</div>
+                        <h1 style="font-size:2rem; color:#0f172a; max-width:800px; margin:0 auto;">${art.title}</h1>
+                    </div>
+                    <div class="art-body">${art.content}</div>
+                `;
+            } else {
+                c.innerHTML = '<p style="text-align:center; color:red;">Article not found. It might be too old or the link is incorrect.</p>';
+            }
+        },
+
         fetchData: async () => {
             const now = new Date();
 
-            // 1. ALERTS
+            // ALERTS
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.alerts}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 const data = d.record;
                 const active = (data.blocks||[]).filter(b => new Date(b.endTime) > now);
@@ -513,7 +606,7 @@
                 } else { c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">No active significant weather alerts.</div>'; }
             });
 
-            // 2. STORMCAST
+            // STORMCAST
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.storm}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 const active = (d.record.outlooks||[]).filter(o => new Date(o.validUntil) > now);
                 const c = document.getElementById('storm-feed'); c.innerHTML = '';
@@ -527,7 +620,7 @@
                 });
             });
 
-            // 3. SNOWCAST
+            // SNOWCAST
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.snow}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 const data = d.record;
                 document.getElementById('sc-main-title').innerText = data.mainTitle || "SnowCast";
@@ -538,7 +631,7 @@
                 active.forEach(f => { c.innerHTML += `<div class="alert-card border-${f.riskLevel}"><div class="ac-head"><strong>${f.region}</strong><span class="badge bg-${f.riskLevel}">${f.riskLevel} Snow Risk</span></div><div class="ac-body"><div class="ac-meta"><div><span class="ac-label">Valid From</span>${new Date(f.validFrom).toLocaleString()}</div><div><span class="ac-label">Valid To</span>${new Date(f.validTo).toLocaleString()}</div></div><p>${f.summary}</p></div></div>`; });
             });
 
-            // 4. SWO
+            // SWO
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.sig}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 document.getElementById('swo-title').innerText = d.record.overallTitle || "";
                 document.getElementById('swo-summary').innerText = d.record.overallSummary || "";
@@ -548,71 +641,13 @@
                 active.forEach(f => { c.innerHTML += `<div class="swo-card border-${f.alertLevel}">${f.imageUrl ? `<img src="${f.imageUrl}" class="swo-img" onclick="document.getElementById('lb-img').src=this.src;document.getElementById('lb').style.display='flex'">` : ''}<div><h3 style="margin-bottom:5px;">${new Date(f.date).toLocaleDateString('en-NZ', {weekday:'long', day:'numeric', month:'long'})}</h3><span class="badge bg-${f.alertLevel}">${f.alertLevel || 'Low'} Risk</span><p style="margin-top:10px; color:#475569;">${f.summary}</p></div></div>`; });
             });
 
-            // 5. NEWS
-            fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.news}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
-                
-                // ROBUST NEWS LOADING - Handles different JSON structures
-                let newsList = [];
-                if (d.record && d.record.news) {
-                    newsList = d.record.news;
-                } else if (d.news) {
-                    newsList = d.news;
-                }
-
-                window.newsData = newsList;
-                
-                // Sort new to old
-                window.newsData.sort((a,b) => new Date(b.scheduledAt) - new Date(a.scheduledAt));
-
-                // RENDER LATEST 3 ON HOME
-                const homeFeed = document.getElementById('home-news-feed');
-                homeFeed.innerHTML = '';
-                if(window.newsData.length === 0) {
-                    homeFeed.innerHTML = '<p>No recent updates.</p>';
-                } else {
-                    window.newsData.slice(0, 3).forEach(n => {
-                        const id = n.scheduledAt ? new Date(n.scheduledAt).getTime() : 0;
-                        const img = (n.titleImg && n.titleImg !== 'MOCK_URL') ? n.titleImg : 'logo.png';
-                        
-                        homeFeed.innerHTML += `<div class="news-card" onclick="app.router('#/article/${id}')"><div class="nc-img" style="background-image:url('${img}')"><span class="nc-tag">${n.tag}</span></div><div class="nc-body"><div class="nc-date">${new Date(n.scheduledAt).toLocaleDateString()}</div><div class="nc-title">${n.title}</div><div class="nc-link">${n.linkText || 'Read More'} &rarr;</div></div></div>`;
-                    });
-                }
-
-                // RENDER FULL GRID ON NEWS PAGE
-                const newsPageFeed = document.getElementById('news-feed');
-                newsPageFeed.innerHTML = '';
-                if(window.newsData.length === 0) {
-                     newsPageFeed.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8; grid-column: 1 / -1;">No news articles found. Check back soon!</div>';
-                } else {
-                    window.newsData.forEach(n => {
-                        const id = n.scheduledAt ? new Date(n.scheduledAt).getTime() : 0;
-                        const img = (n.titleImg && n.titleImg !== 'MOCK_URL') ? n.titleImg : 'logo.png';
-                        
-                        newsPageFeed.innerHTML += `<div class="news-card" onclick="app.router('#/article/${id}')"><div class="nc-img" style="background-image:url('${img}')"><span class="nc-tag">${n.tag}</span></div><div class="nc-body"><div class="nc-date">${new Date(n.scheduledAt).toLocaleDateString()}</div><div class="nc-title">${n.title}</div><div class="nc-link">${n.linkText || 'Read More'} &rarr;</div></div></div>`;
-                    });
-                }
-            });
-
-            // 6. DROUGHT
+            // DROUGHT
             fetch(getFresh(`https://api.jsonbin.io/v3/b/${CONFIG.drought}/latest`), {headers:{'X-Master-Key':CONFIG.key}}).then(r=>r.json()).then(d => {
                 document.getElementById('dc-title').innerText = d.record.overview?.title || "";
                 document.getElementById('dc-sum').innerText = d.record.overview?.summary || "";
                 const c = document.getElementById('dc-feed'); c.innerHTML = '';
                 (d.record.alerts||[]).forEach(a => { c.innerHTML += `<div class="dc-card"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><strong>${a.region}</strong><span class="badge bg-${a.severity}">${a.severity}</span></div><div class="ac-meta"><div><span class="ac-label">Rain Potential</span>${a.rainPotential}</div><div><span class="ac-label">Expires</span>${new Date(a.endDate).toLocaleDateString()}</div></div><p>${a.summary}</p></div>`; });
             });
-        },
-
-        loadArticle: (id) => {
-            const c = document.getElementById('article-content');
-            c.innerHTML = '<p style="text-align:center">Loading article...</p>';
-            if(!window.newsData) { setTimeout(() => app.loadArticle(id), 500); return; }
-            const art = window.newsData.find(n => (new Date(n.scheduledAt).getTime() == id));
-            if(art) {
-                // Fallback image for detail view too
-                const img = (art.titleImg && art.titleImg !== 'MOCK_URL') ? art.titleImg : 'logo.png';
-                
-                c.innerHTML = `<div class="art-header"><div style="color:#94a3b8; font-size:0.9rem; text-transform:uppercase; font-weight:700; margin-bottom:10px;">${art.tag} • ${new Date(art.scheduledAt).toLocaleDateString()}</div><h1 style="font-size:2rem; color:#0f172a; max-width:800px; margin:0 auto;">${art.title}</h1></div><img src="${img}" class="art-img"><div class="art-body">${art.content}</div>`;
-            } else { c.innerHTML = '<p style="text-align:center; color:red;">Article not found.</p>'; }
         }
     };
 
