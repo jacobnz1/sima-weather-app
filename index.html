@@ -47,20 +47,86 @@
         .border-Critical { border-left-color: var(--risk-critical) !important; }
         .border-Special { border-left-color: var(--risk-special) !important; }
 
-        /* --- NAV --- */
+        /* --- NAV & HEADER --- */
         #alert-banner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 40px; background: var(--risk-high); color: white; z-index: 1002; text-align: center; line-height: 40px; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
         body.has-alert { padding-top: 110px; } body.has-alert header { top: 40px; } body.has-alert .m-menu { top: 110px; height: calc(100vh - 110px); }
-        header { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px; }
-        .nav-wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; height: 100%; display: flex; align-items: center; justify-content: space-between; }
-        .brand img { height: 45px; width: auto; }
-        .d-menu { display: none; gap: 20px; } @media(min-width: 950px) { .d-menu { display: flex; } }
-        .nav-link { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); text-decoration: none; } .nav-link:hover { color: var(--accent); }
         
-        .nav-btn-refresh { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .nav-btn-refresh:hover { background: #e2e8f0; }
+        header { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px; }
+        .nav-wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 100%; display: flex; align-items: center; justify-content: space-between; }
+        .brand img { height: 45px; width: auto; }
+        
+        /* DESKTOP MENU & DROPDOWNS */
+        .d-menu { display: none; height: 100%; align-items: center; gap: 0; } 
+        @media(min-width: 950px) { .d-menu { display: flex; } }
+        
+        /* Shared style for Standalone Links and Dropdown Triggers */
+        .nav-root-item { 
+            position: relative; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 18px; /* Consistent generous padding */
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 14px; 
+            color: var(--text); 
+            text-decoration: none;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        .nav-root-item:hover { color: var(--accent); background-color: #f8fafc; }
+        .nav-root-item svg { margin-left: 6px; opacity: 0.6; width: 12px; }
+
+        /* Dropdown Logic */
+        .dropdown-menu { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: white; 
+            border: 1px solid var(--border); 
+            min-width: 260px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            border-radius: 0 0 8px 8px; 
+            flex-direction: column; 
+            overflow: hidden; 
+            animation: slideDown 0.2s ease; 
+        }
+        .nav-root-item:hover .dropdown-menu { display: flex; }
+        
+        .dropdown-link { 
+            padding: 14px 20px; 
+            text-decoration: none; 
+            color: var(--text); 
+            font-size: 0.9rem; 
+            border-bottom: 1px solid #f8fafc; 
+            transition: 0.2s; 
+        }
+        .dropdown-link:hover { background: #f1f5f9; color: var(--accent); padding-left: 25px; }
+        .dropdown-link:last-child { border-bottom: none; }
+        
+        @keyframes slideDown { from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+        
+        .nav-btn-refresh { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; margin-left: 15px; font-weight: 600; color:#475569; }
+        .nav-btn-refresh:hover { background: #e2e8f0; color:#0f172a; }
 
         .m-toggle { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; } @media(min-width: 950px) { .m-toggle { display: none; } }
-        .m-menu { position: fixed; top: 70px; right: 0; width: 250px; height: 100vh; background: white; transform: translateX(100%); transition: 0.3s; padding: 20px; border-left: 1px solid var(--border); z-index: 999; display: flex; flex-direction: column; gap: 15px; } .m-menu.open { transform: translateX(0); }
+        
+        /* MOBILE MENU - UPDATED SPACING */
+        .m-menu { position: fixed; top: 70px; right: 0; width: 300px; height: 100vh; background: white; transform: translateX(100%); transition: 0.3s; padding: 25px; border-left: 1px solid var(--border); z-index: 999; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-bottom: 80px; } 
+        .m-menu.open { transform: translateX(0); }
+        .m-group-title { 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            margin-top: 25px; 
+            margin-bottom: 8px; 
+            letter-spacing: 0.5px; 
+            border-bottom: 1px solid #f1f5f9; 
+            padding-bottom: 5px;
+        }
+        .m-link { font-size: 1rem; font-weight: 600; padding: 12px 10px; border-radius: 8px; text-decoration: none; color: #334155; display: block; transition:0.1s; }
+        .m-link:active { background: #f1f5f9; color: var(--accent); }
 
         /* --- COMPONENTS --- */
         .alert-card { background: white; border: 1px solid var(--border); border-left: 5px solid var(--risk-mod); border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
@@ -76,9 +142,16 @@
         .fc-region { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); border-left: 4px solid transparent; }
         .risk-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
         
-        .swo-card { display: flex; gap: 20px; background: white; border: 1px solid var(--border); padding: 20px; border-radius: 10px; margin-bottom: 20px; align-items: start; }
-        @media(max-width: 600px) { .swo-card { flex-direction: column; } }
-        .swo-img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; background: #e2e8f0; flex-shrink: 0; cursor: pointer; }
+        /* SWO CARD UPDATED */
+        .swo-card { display: flex; gap: 25px; background: white; border: 1px solid var(--border); padding: 25px; border-radius: 10px; margin-bottom: 25px; align-items: start; }
+        /* Larger image, no crop, readable */
+        .swo-img { width: 340px; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; cursor: pointer; transition: transform 0.2s; }
+        .swo-img:hover { transform: scale(1.02); }
+        
+        @media(max-width: 850px) { 
+            .swo-card { flex-direction: column; } 
+            .swo-img { width: 100%; max-height: 450px; margin-bottom: 15px; }
+        }
         
         /* NEWS LAYOUT */
         .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
@@ -189,18 +262,37 @@
     <header>
         <div class="nav-wrap">
             <div class="brand" onclick="app.router('#/')"><img src="logo.png" alt="SIMA" onerror="this.style.display='none'"></div>
+            
+            <!-- DESKTOP DROPDOWN MENU -->
             <nav class="d-menu">
-                <a onclick="app.router('#/')" class="nav-link">Home</a>
-                <a onclick="app.router('#/news')" class="nav-link">News</a>
-                <a onclick="app.router('#/outlook')" class="nav-link">Outlook</a>
-                <a onclick="app.router('#/alerts')" class="nav-link">Alerts</a>
-                <a onclick="app.router('#/stormcast')" class="nav-link">StormCast</a>
-                <a onclick="app.router('#/snowcast')" class="nav-link">SnowCast</a>
-                <a onclick="app.router('#/drought')" class="nav-link">DroughtCast</a>
-                <a onclick="app.router('#/radar')" class="nav-link">Radar</a>
-                <a onclick="app.router('#/about')" class="nav-link">About</a>
+                <a onclick="app.router('#/')" class="nav-root-item">Home</a>
+                
+                <!-- SEVERE WEATHER GROUP -->
+                <div class="nav-root-item">
+                    Severe Weather <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+                    <div class="dropdown-menu">
+                        <a onclick="app.router('#/outlook')" class="dropdown-link">Significant Weather Outlook</a>
+                        <a onclick="app.router('#/alerts')" class="dropdown-link">Significant Weather Alerts</a>
+                    </div>
+                </div>
+
+                <!-- FORECASTS GROUP -->
+                <div class="nav-root-item">
+                    Forecasts <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+                    <div class="dropdown-menu">
+                        <a onclick="app.router('#/stormcast')" class="dropdown-link">StormCast</a>
+                        <a onclick="app.router('#/snowcast')" class="dropdown-link">SnowCast</a>
+                        <a onclick="app.router('#/drought')" class="dropdown-link">DroughtCast</a>
+                    </div>
+                </div>
+
+                <!-- STANDALONE TABS -->
+                <a onclick="app.router('#/news')" class="nav-root-item">News</a>
+                <a onclick="app.router('#/radar')" class="nav-root-item">Radar</a>
+                <a onclick="app.router('#/about')" class="nav-root-item">About Us</a>
             </nav>
-            <div style="display:flex; align-items:center; gap:10px;">
+
+            <div style="display:flex; align-items:center; gap:5px;">
                 <button class="nav-btn-refresh" onclick="window.location.reload()">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh
                 </button>
@@ -209,16 +301,23 @@
         </div>
     </header>
 
+    <!-- MOBILE MENU (Restructured for intuitive grouping) -->
     <div class="m-menu" id="mm">
-        <a onclick="app.router('#/')" class="nav-link">Home</a>
-        <a onclick="app.router('#/news')" class="nav-link">News</a>
-        <a onclick="app.router('#/outlook')" class="nav-link">Outlook</a>
-        <a onclick="app.router('#/alerts')" class="nav-link">Alerts</a>
-        <a onclick="app.router('#/stormcast')" class="nav-link">StormCast</a>
-        <a onclick="app.router('#/snowcast')" class="nav-link">SnowCast</a>
-        <a onclick="app.router('#/drought')" class="nav-link">DroughtCast</a>
-        <a onclick="app.router('#/radar')" class="nav-link">Radar</a>
-        <a onclick="app.router('#/about')" class="nav-link">About</a>
+        <a onclick="app.router('#/')" class="m-link">Home</a>
+        
+        <div class="m-group-title">Severe Weather</div>
+        <a onclick="app.router('#/outlook')" class="m-link">Significant Weather Outlook</a>
+        <a onclick="app.router('#/alerts')" class="m-link">Significant Weather Alerts</a>
+        
+        <div class="m-group-title">Forecasts</div>
+        <a onclick="app.router('#/stormcast')" class="m-link">StormCast</a>
+        <a onclick="app.router('#/snowcast')" class="m-link">SnowCast</a>
+        <a onclick="app.router('#/drought')" class="m-link">DroughtCast</a>
+        
+        <div class="m-group-title">General</div>
+        <a onclick="app.router('#/news')" class="m-link">News</a>
+        <a onclick="app.router('#/radar')" class="m-link">Radar</a>
+        <a onclick="app.router('#/about')" class="m-link">About Us</a>
     </div>
 
     <main class="container">
@@ -279,17 +378,25 @@
             <div class="ad-box">[AdSense]</div>
         </section>
 
-        <!-- OTHER PAGES -->
+        <!-- SIGNIFICANT WEATHER OUTLOOK -->
         <section id="page-outlook" class="page"><h1 style="margin-bottom:10px;">Significant Weather Outlook</h1><div style="background:white; padding:20px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:30px;"><h3 id="swo-title">Loading...</h3><p id="swo-summary" style="color:#64748b; margin-top:5px;"></p></div><div id="outlook-container"></div><div class="ad-box">[AdSense]</div></section>
+        
+        <!-- STORMCAST -->
         <section id="page-storm" class="page"><div style="text-align:center; margin-bottom:30px;"><h1 style="color:#0f172a;">StormCast</h1><p>Convective Outlooks & Thunderstorm Risks</p></div><div id="storm-feed"></div><div class="ad-box">[AdSense]</div></section>
+        
+        <!-- SNOWCAST -->
         <section id="page-snow" class="page"><div style="background:#f8fafc; padding:30px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:30px; text-align:center;"><h1 id="sc-main-title">SnowCast</h1><p id="sc-main-overview" style="color:#64748b; margin-top:10px;">Checking latest guidance...</p></div><div id="snow-feed"></div><div class="ad-box">[AdSense]</div></section>
+        
+        <!-- DROUGHTCAST -->
         <section id="page-drought" class="page"><h1>DroughtCast</h1><div style="background:white; padding:20px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:20px;"><h3 id="dc-title">--</h3><p id="dc-sum">--</p></div><div id="dc-feed"></div><div class="ad-box">[AdSense]</div></section>
+        
+        <!-- RADAR -->
         <section id="page-radar" class="page"><h1>Maps & Radar</h1><iframe src="https://embed.windy.com/embed2.html?lat=-43.5&lon=171.5&zoom=6&level=surface&overlay=radar&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" style="width:100%; height:70vh; border:none; border-radius:12px;"></iframe></section>
         
         <!-- ABOUT PAGE -->
         <section id="page-about" class="page">
             <div class="about-section">
-                <h2>About SIMA</h2>
+                <h2>About Us</h2>
                 <p>At SIMA (South Island Met Agency), we understand the importance of staying informed about significant weather risks for individuals and communities across the Island. Founded on 20th June 2015 as Severe Weather NZ, we transitioned to SIMA to focus specifically on the South Island.</p>
                 <p><strong>Disclaimer:</strong> We do not issue official warnings or watches—this authority lies with MetService New Zealand. Instead, we provide independent forecasts with associated probability risks for potential severe weather, helping communities make informed decisions.</p>
                 
